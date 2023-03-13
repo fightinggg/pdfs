@@ -1,15 +1,17 @@
 package com.pdfs.fs;
 
 import com.pdfs.basicnetfs.BasicNetFs;
+import com.pdfs.basicnetfs.GithubApiBasicNetFsImpl;
 import com.pdfs.basicnetfs.JGitRepoBasicNetFsImpl;
 import com.pdfs.basicnetfs.LocalFileSystemBasicNetFsImpl;
+import com.pdfs.basicnetfs.QiniuBasicNetFsImpl;
 import com.pdfs.basicnetfs.SystemGitRepoBasicNetFsImpl;
 import com.pdfs.encryptionfs.AesEncryptionFsImpl;
 import com.pdfs.encryptionfs.EncryptionFs;
-import com.pdfs.normalfs.DirectFileNormalFsImpl;
+import com.pdfs.encryptionfs.NoEncryptionFsImpl;
+import com.pdfs.normalfs.FileNormalFsImpl;
 import com.pdfs.normalfs.NormalFs;
 import com.pdfs.signfs.Md5SignFsImpl;
-import com.pdfs.signfs.SignFs;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,42 +20,52 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Factory {
-    public static NormalFs getFs(String key, String type, Map<String, String> config) {
-        if (Objects.equals(type, "local")) {
-            while (key.length() < 32) {
-                key = key + " ";
-            }
+    public static NormalFs getFs(Map<String, String> config) {
 
-            BasicNetFs basicNetFs = new LocalFileSystemBasicNetFsImpl("./localfs");
-            SignFs signFs = new Md5SignFsImpl(basicNetFs);
-            EncryptionFs encryptionFs = new AesEncryptionFsImpl(signFs, key.getBytes());
-            return new DirectFileNormalFsImpl(key.getBytes(StandardCharsets.UTF_8), encryptionFs);
-        } else if (Objects.equals(type, "git")) {
-            while (key.length() < 32) {
-                key = key + " ";
-            }
+        BasicNetFs basicNetFs = getBasicNetFs(config);
 
-            BasicNetFs basicNetFs = new JGitRepoBasicNetFsImpl("".getBytes(StandardCharsets.UTF_8), "git@github.com:fightinggg/pdfs-data.git");
-            SignFs signFs = new Md5SignFsImpl(basicNetFs);
-            EncryptionFs encryptionFs = new AesEncryptionFsImpl(signFs, key.getBytes());
-            return new DirectFileNormalFsImpl(key.getBytes(StandardCharsets.UTF_8), encryptionFs);
-        } else if (Objects.equals(type, "system_git")) {
-            while (key.length() < 32) {
-                key = key + " ";
-            }
+        return getFileNormalFs(config, basicNetFs);
 
+    }
+
+    private static BasicNetFs getBasicNetFs(Map<String, String> config) {
+        BasicNetFs basicNetFs;
+
+        if (Objects.equals(config.get("type"), "local")) {
+            basicNetFs = new LocalFileSystemBasicNetFsImpl("./localfs");
+        } else if (Objects.equals(config.get("type"), "git")) {
+            basicNetFs = new JGitRepoBasicNetFsImpl("" .getBytes(StandardCharsets.UTF_8), "git@github.com:fightinggg/pdfs-data.git");
+        } else if (Objects.equals(config.get("type"), "system_git")) {
             String localRepo = null;
             try {
                 localRepo = new File("../pdfs_systemgitfs").getCanonicalPath();
             } catch (IOException e) {
                 localRepo = "./pdfs_systemgitfs";
             }
-
-            BasicNetFs basicNetFs = new SystemGitRepoBasicNetFsImpl(localRepo, "git@github.com:fightinggg/pdfs-data.git", "");
-            SignFs signFs = new Md5SignFsImpl(basicNetFs);
-            EncryptionFs encryptionFs = new AesEncryptionFsImpl(signFs, key.getBytes());
-            return new DirectFileNormalFsImpl(key.getBytes(StandardCharsets.UTF_8), encryptionFs);
+            basicNetFs = new SystemGitRepoBasicNetFsImpl(localRepo, "git@github.com:fightinggg/pdfs-data.git", "");
+        } else if (Objects.equals(config.get("type"), "qiniu")) {
+            basicNetFs = new QiniuBasicNetFsImpl(config.get("qiniu_accessKey"), config.get("qiniu_secretKey"), config.get("qiniu_bucket"));
+        } else if (Objects.equals(config.get("type"), "github_api")) {
+            basicNetFs = new GithubApiBasicNetFsImpl(config.get("github_token"), config.get("github_username"), config.get("github_reponame"));
+        } else {
+            throw new RuntimeException("FS ERR");
         }
-        throw new RuntimeException("FS ERR");
+        return basicNetFs;
+    }
+
+    private static FileNormalFsImpl getFileNormalFs(Map<String, String> config, BasicNetFs basicNetFs) {
+        String key = config.get("key");
+        while (key.length() < 32) {
+            key = key + " ";
+        }
+
+        EncryptionFs encryptionFs;
+
+        if (key.length() == 0) {
+            encryptionFs = new NoEncryptionFsImpl(basicNetFs);
+        } else {
+            encryptionFs = new AesEncryptionFsImpl(new Md5SignFsImpl(basicNetFs), key.getBytes());
+        }
+        return new FileNormalFsImpl(key.getBytes(StandardCharsets.UTF_8), encryptionFs);
     }
 }

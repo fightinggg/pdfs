@@ -23,7 +23,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
 
     private void awaitExec(Process exec) throws InterruptedException, IOException {
         exec.waitFor();
-        if (false) {
+        if (true) {
             byte[] stdout = exec.getInputStream().readAllBytes();
             byte[] errout = exec.getErrorStream().readAllBytes();
 
@@ -36,12 +36,18 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
         }
     }
 
+    private int awaitExecErr(Process exec) throws InterruptedException, IOException {
+        awaitExec(exec);
+        return exec.exitValue();
+    }
+
     @Override
     public byte[] readValid(String fileName) throws IOException {
         try {
             init();
 
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", "master"}, null, new File(localGitRepo)));
+            awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", fileName}, null, new File(localGitRepo)));
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", "-b", fileName}, null, new File(localGitRepo)));
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", fileName}, null, new File(localGitRepo)));
 
@@ -60,8 +66,13 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
         if (!new File(localGitRepo + "/.git").exists()) {
             FileUtils.forceMkdir(new File(localGitRepo));
 
-            awaitExec(Runtime.getRuntime().exec(new String[]{"git", "clone", remoteGitRepo, "."}, null, new File(localGitRepo)));
+            int status = awaitExecErr(Runtime.getRuntime().exec(new String[]{"git", "clone", remoteGitRepo, "."}, null, new File(localGitRepo)));
+            if (status != 0) {
+                throw new RuntimeException(status + "");
+            }
 
+            awaitExec(Runtime.getRuntime().exec(new String[]{"git", "config", "--global", "user.email","246553278@qq.com"}, null, new File(localGitRepo)));
+            awaitExec(Runtime.getRuntime().exec(new String[]{"git", "config", "--global", "user.name","pdfs"}, null, new File(localGitRepo)));
 
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", "-b", "master"}, null, new File(localGitRepo)));
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", "master"}, null, new File(localGitRepo)));
@@ -88,6 +99,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
             init();
 
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", "master"}, null, new File(localGitRepo)));
+            awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", fileName}, null, new File(localGitRepo)));
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", "-b", fileName}, null, new File(localGitRepo)));
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", fileName}, null, new File(localGitRepo)));
 
@@ -97,7 +109,10 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
 
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "add", fileName}, null, new File(localGitRepo)));
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "commit", "-m", "-"}, null, new File(localGitRepo)));
-            awaitExec(Runtime.getRuntime().exec(new String[]{"git", "push", "--set-upstream", "origin", fileName}, null, new File(localGitRepo)));
+            int status = awaitExecErr(Runtime.getRuntime().exec(new String[]{"git", "push", "--set-upstream", "origin", fileName}, null, new File(localGitRepo)));
+            if (status != 0) {
+                throw new RuntimeException(status + "");
+            }
 
         } catch (Exception e) {
             throw new RuntimeException(e);

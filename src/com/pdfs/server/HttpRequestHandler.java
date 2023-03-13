@@ -1,37 +1,65 @@
 package com.pdfs.server;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
-import io.netty.util.concurrent.EventExecutorGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-
-import static io.netty.handler.codec.http.HttpHeaderUtil.is100ContinueExpected;
+import java.util.stream.Collectors;
 
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
-    HttpHandler httpHandler = new HttpHandler();
+    Logger log = LoggerFactory.getLogger(HttpRequestHandler.class);
+    HttpHandler httpHandler;
 
+    public HttpRequestHandler(Map<String, String> config) {
+        this.httpHandler = new HttpHandler(config);
+    }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
-        ByteBuf buffer = Unpooled.buffer();
-        ByteBufOutputStream byteBufOutputStream = new ByteBufOutputStream(buffer);
+    protected void messageReceived(ChannelHandlerContext ctx, FullHttpRequest req) {
 
 
-        ByteBufInputStream byteBufInputStream = new ByteBufInputStream(req.content());
-        int status = httpHandler.httpHandler(req.uri(), req.method().toString(), byteBufInputStream, byteBufOutputStream);
+        ByteBufInputStream reqBody = new ByteBufInputStream(req.content());
+        HttpRsp rsp = null;
+        try {
+            rsp = httpHandler.httpHandler(req.uri(), req.method().toString(), reqBody);
+        } catch (IOException e) {
+            log.error("", e);
+            rsp = new HttpRsp(500, "Server Error");
+        }
 
-        // 创建http响应
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1,
-                HttpResponseStatus.valueOf(status),
-                buffer);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        rsp.headers.put("Server", "Pdfs");
+        rsp.headers.put("Connection", "Keep-Alive");
+
+        String httpLine = "HTTP/1.1 %d".formatted(rsp.status);
+        String httpHeaders = rsp.headers.entrySet().stream().map(o -> o.getKey() + ": " + o.getValue()).collect(Collectors.joining("\n"));
+
+        String msg = httpLine + "\n" + httpHeaders + "\n\n";
+        ctx.writeAndFlush(Unpooled.buffer().writeBytes(msg.getBytes(StandardCharsets.UTF_8)));
+
+        InputStream body = rsp.body;
+        int block = 1 << 20; // 1MB
+        byte[] bytes = new byte[block];
+
+        try {
+            while (true) {
+                int size = body.read(bytes);
+                if (size == -1) {
+                    break;
+                }
+                ctx.writeAndFlush(Unpooled.buffer().writeBytes(bytes, 0, size));
+            }
+        } catch (Exception e) {
+            log.error("", e);
+        } finally {
+            ctx.flush();
+            ctx.close().addListener(ChannelFutureListener.CLOSE);
+        }
     }
 }

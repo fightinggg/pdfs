@@ -1,46 +1,49 @@
 package com.pdfs.server;
 
-import com.pdfs.fs.Factory;
-import com.pdfs.normalfs.DirectFileNormalFsImpl;
-import com.pdfs.normalfs.NormalFs;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
-import org.apache.commons.io.IOUtils;
-
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class HttpHandler {
+    String usage = """
+            <body>
+                Welcome To PDFS V1.0! Your can click <a href='/fsapi/webls/'>here</a> to Quick Start
+                <br></br>
+                PDFS Using <a href="https://github.com/fightinggg/pdfs-data-githubapi">Github Repo</a> To Stoage Files, Every File In Github Has Bean Encrypting
+                <br></br>
+                PDFS source code in <a href='https://github.com/fightinggg/pdfs'>here</a>
+            </body>
+
+            """;
 
 
-    FsHandler fsHandler = new FsHandler();
+    FsHandler fsHandler;
 
-    int httpHandler(String url, String method, InputStream inputStream, OutputStream outputStream) throws IOException {
+    public HttpHandler(Map<String, String> config) {
+        this.fsHandler = new FsHandler(config);
+    }
+
+    HttpRsp httpHandler(String url, String method, InputStream inputStream) throws IOException {
         if (url.contains("//")) {
-            IOUtils.write("Bad URL: " + url, outputStream);
-            return 400;
+            return new HttpRsp(400, "Bad URL: " + url);
         }
         if (method.equals("GET") && url.startsWith("/static/")) {
-            return getStaticFiles(url, outputStream);
+            return getStaticFiles(url);
         } else if (url.startsWith("/fsapi/")) {
-            return fsHandler.httpHandler(url, method, inputStream, outputStream);
+            return fsHandler.httpHandler(url, method, inputStream);
         } else {
-            IOUtils.write("Welcome To PDFS!", outputStream);
-            return 200;
+            return new HttpRsp(200, usage);
         }
     }
 
-    private int getStaticFiles(String url, OutputStream outputStream) throws IOException {
+    private HttpRsp getStaticFiles(String url) throws IOException {
         if (url.contains("..")) {
-            IOUtils.write("url could not contain '..' ", outputStream);
-            return 403;
+            return new HttpRsp(403, "url could not contain '..' ");
+
         } else {
             try {
-                IOUtils.copy(new FileInputStream(url), outputStream);
-                return 200;
+                return new HttpRsp(200, new FileInputStream(url));
             } catch (Exception e) {
-                IOUtils.write("could not found " + url, outputStream);
-                return 404;
+                return new HttpRsp(404, "could not found " + url);
             }
         }
     }
