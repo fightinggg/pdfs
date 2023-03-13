@@ -42,7 +42,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         String httpHeaders = rsp.headers.entrySet().stream().map(o -> o.getKey() + ": " + o.getValue()).collect(Collectors.joining("\n"));
 
         String msg = httpLine + "\n" + httpHeaders + "\n\n";
-        ctx.writeAndFlush(Unpooled.buffer().writeBytes(msg.getBytes(StandardCharsets.UTF_8)));
+        byte[] bytes = msg.getBytes(StandardCharsets.UTF_8);
+        ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes));
 
         InputStream body = rsp.body;
         int block = 1 << 10; // 1KB
@@ -50,7 +51,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         try {
             int totalSize = 0;
             while (true) {
-                ByteBuf buffer = Unpooled.buffer();
+                ByteBuf buffer = Unpooled.buffer(block);
                 int size = buffer.writeBytes(body, block);
                 if (size <= 0) {
                     break;
