@@ -6,8 +6,10 @@ import io.netty.handler.codec.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,23 +51,21 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         int block = 1 << 10; // 1KB
 
         try {
-            ctx.writeAndFlush(Unpooled.buffer().writeBytes(body.readAllBytes()));
-
-//            int totalSize = 0;
-//            while (true) {
-//                ByteBuf buffer = Unpooled.buffer(block);
-//                int size = buffer.writeBytes(body, block);
-//                if (size <= 0) {
-//                    break;
-//                }
-//                totalSize += size;
-//                ctx.writeAndFlush(buffer);
-//            }
-//            log.info("request reach END, send bytes={}", totalSize);
+            int totalSize = 0;
+            while (true) {
+                ByteBuf buffer = Unpooled.buffer(block);
+                int size = buffer.writeBytes(body, block);
+                if (size <= 0) {
+                    break;
+                }
+                totalSize += size;
+                ctx.writeAndFlush(buffer);
+            }
+            log.info("request reach END, send bytes={}", totalSize);
         } catch (Exception e) {
             log.error("", e);
         } finally {
-            ctx.close();
+            ctx.writeAndFlush(Unpooled.buffer()).addListener(ChannelFutureListener.CLOSE);
         }
     }
 }
