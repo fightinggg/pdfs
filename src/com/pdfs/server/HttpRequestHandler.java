@@ -62,7 +62,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         } catch (Exception e) {
             log.error("", e);
         } finally {
-            ctx.close().addListener(ChannelFutureListener.CLOSE);
+            ctx.close();
         }
     }
 }
