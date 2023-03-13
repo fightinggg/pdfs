@@ -4,6 +4,8 @@ import com.pdfs.utils.AES;
 import com.pdfs.utils.Hex;
 import com.pdfs.encryptionfs.EncryptionFs;
 import com.pdfs.utils.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FileNormalFsImpl implements NormalFs {
+
+    Logger log = LoggerFactory.getLogger(FileNormalFsImpl.class);
 
     private static final long maxFileSize = 1 << 20;//1MB
 
@@ -97,6 +101,7 @@ public class FileNormalFsImpl implements NormalFs {
                     });
 
                 }
+                log.debug("total{} bytes prepare to send", validSize);
                 return new PdfsFileInputStream(validSize, IOUtils.merge(res));
             }
 
