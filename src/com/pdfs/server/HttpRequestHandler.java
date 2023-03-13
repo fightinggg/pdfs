@@ -28,6 +28,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         ByteBufInputStream reqBody = new ByteBufInputStream(req.content());
         HttpRsp rsp = null;
         try {
+            log.info("receive: {} {}", req.method(), req.uri());
             rsp = httpHandler.httpHandler(req.uri(), req.method().toString(), reqBody);
         } catch (IOException e) {
             log.error("", e);
