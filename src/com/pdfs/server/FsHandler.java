@@ -47,8 +47,7 @@ public class FsHandler {
         if (method.equals("POST") && url.startsWith("/fsapi/writeBig/")) {
             return fsWriteBigHandler.writeBigHandler(url, method, inputStream);
         }
-        ((OutputStream) null).write("SORRY! Your Request Is Not Valid! ".getBytes(StandardCharsets.UTF_8));
-        return new HttpRsp(403, "");
+        return new HttpRsp(403, "SORRY! Your Request Is Not Valid!");
     }
 
 
