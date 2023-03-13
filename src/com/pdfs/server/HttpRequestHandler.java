@@ -44,7 +44,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         ctx.writeAndFlush(Unpooled.buffer().writeBytes(msg.getBytes(StandardCharsets.UTF_8)));
 
         InputStream body = rsp.body;
-        int block = 1 << 20; // 1MB
+        int block = 1 << 10; // 1KB
         byte[] bytes = new byte[block];
 
         try {
