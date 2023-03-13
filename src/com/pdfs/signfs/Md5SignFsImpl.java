@@ -3,6 +3,7 @@ package com.pdfs.signfs;
 import com.pdfs.basicnetfs.BasicNetFs;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
@@ -15,7 +16,7 @@ public class Md5SignFsImpl implements SignFs {
     }
 
     @Override
-    public byte[] read(String fileName) throws IOException {
+    public InputStream read(String fileName) throws IOException {
         byte[] read = basicNetFs.read(fileName);
         byte[] res = new byte[read.length - 16];
         byte[] digest = new byte[16];
@@ -35,7 +36,7 @@ public class Md5SignFsImpl implements SignFs {
     }
 
     @Override
-    public void write(String fileName, byte[] data) throws IOException {
+    public void write(String fileName, InputStream data) throws IOException {
         try {
             MessageDigest md5 = MessageDigest.getInstance("md5");
             byte[] digest = md5.digest(data);

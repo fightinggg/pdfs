@@ -3,6 +3,7 @@ package com.pdfs.encryptionfs;
 import com.pdfs.basicnetfs.BasicNetFs;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 public class NoEncryptionFsImpl implements EncryptionFs {
 
@@ -12,11 +13,11 @@ public class NoEncryptionFsImpl implements EncryptionFs {
         this.basicNetFs = basicNetFs;
     }
 
-    public byte[] read(String fileName) throws IOException {
+    public InputStream read(String fileName) throws IOException {
         return basicNetFs.read(fileName);
     }
 
-    public void write(String fileName, byte[] data) throws IOException {
+    public void write(String fileName, InputStream data) throws IOException {
         basicNetFs.write(fileName, data);
     }
 

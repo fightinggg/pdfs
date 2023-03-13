@@ -1,9 +1,8 @@
 package com.pdfs.basicnetfs;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.pdfs.normalfs.PdfsFileInputStream;
+
+import java.io.*;
 
 public class LocalFileSystemBasicNetFsImpl extends ValidBasicNetFsAbstract {
 
@@ -13,7 +12,7 @@ public class LocalFileSystemBasicNetFsImpl extends ValidBasicNetFsAbstract {
         this.fileDir = fileDir;
     }
 
-    public byte[] readValid(String fileName) throws IOException {
+    public PdfsFileInputStream readValid(String fileName) throws IOException {
         FileInputStream fileInputStream = new FileInputStream(fileDir + "/" + fileName);
         byte[] bytes = fileInputStream.readAllBytes();
         fileInputStream.close();
@@ -21,7 +20,7 @@ public class LocalFileSystemBasicNetFsImpl extends ValidBasicNetFsAbstract {
 
     }
 
-    public void writeValid(String fileName, byte[] data) throws IOException {
+    public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(fileDir + "/" + fileName);
         fileOutputStream.write(data);
         fileOutputStream.close();

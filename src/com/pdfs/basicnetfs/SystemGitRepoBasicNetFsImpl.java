@@ -42,7 +42,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public byte[] readValid(String fileName) throws IOException {
+    public InputStream readValid(String fileName) throws IOException {
         try {
             init();
 
@@ -93,7 +93,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public void writeValid(String fileName, byte[] data) throws IOException {
+    public void writeValid(String fileName, InputStream data) throws IOException {
         try {
 
             init();

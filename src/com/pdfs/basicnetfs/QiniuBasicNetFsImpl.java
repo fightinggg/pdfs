@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -33,7 +34,7 @@ public class QiniuBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public byte[] readValid(String fileName) throws IOException {
+    public InputStream readValid(String fileName) throws IOException {
         // domain   下载 domain, eg: qiniu.com【必须】
 // useHttps 是否使用 https【必须】
 // key      下载资源在七牛云存储的 key【必须】
@@ -47,7 +48,7 @@ public class QiniuBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public void writeValid(String fileName, byte[] data) throws IOException {
+    public void writeValid(String fileName, InputStream data) throws IOException {
 //构造一个带指定 Region 对象的配置类
         Configuration cfg = new Configuration(Region.region2());
         cfg.resumableUploadAPIVersion = Configuration.ResumableUploadAPIVersion.V2;// 指定分片上传版本

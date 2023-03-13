@@ -3,6 +3,7 @@ package com.pdfs.basicnetfs;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.pdfs.normalfs.PdfsFileInputStream;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.internal.storage.dfs.InMemoryRepository;
 import org.eclipse.jgit.transport.*;
@@ -10,16 +11,13 @@ import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig;
 import org.eclipse.jgit.util.FS;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 public class JGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
 
     Git git;
 
-    public JGitRepoBasicNetFsImpl(byte[] primaryKey, String repoAddress) {
+    public JGitRepoBasicNetFsImpl(InputStream primaryKey, String repoAddress) {
         InMemoryRepository.Builder builder = new InMemoryRepository.Builder();
         try {
 
@@ -58,7 +56,7 @@ public class JGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public byte[] readValid(String fileName) throws IOException {
+    public PdfsFileInputStream readValid(String fileName) throws IOException {
 
         try {
 
@@ -78,7 +76,7 @@ public class JGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
                 FileInputStream fileInputStream = new FileInputStream(files[0]);
                 byte[] bytes = fileInputStream.readAllBytes();
                 fileInputStream.close();
-                return bytes;
+                return new PdfsFileInputStream(bytes.length, new ByteArrayInputStream(bytes));
             } else {
                 throw new RuntimeException("");
             }
@@ -89,7 +87,7 @@ public class JGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public void writeValid(String fileName, byte[] data) throws IOException {
+    public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
         try {
             // checkout
             CheckoutCommand checkout = git.checkout();
@@ -100,7 +98,7 @@ public class JGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
             File[] files = git.getRepository().getDirectory().listFiles();
             if (files.length == 1 && files[0].getName().equals(fileName)) {
                 FileOutputStream fileOutputStream = new FileOutputStream(files[0]);
-                fileOutputStream.write(data);
+                fileOutputStream.write(data.readAllBytes());
                 fileOutputStream.close();
 
                 // push

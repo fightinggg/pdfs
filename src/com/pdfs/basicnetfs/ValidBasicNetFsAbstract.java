@@ -1,6 +1,9 @@
 package com.pdfs.basicnetfs;
 
+import com.pdfs.normalfs.PdfsFileInputStream;
+
 import java.io.IOException;
+import java.io.InputStream;
 
 public abstract class ValidBasicNetFsAbstract implements BasicNetFs {
     private boolean fileNameInvalid(String fileName) {
@@ -9,7 +12,7 @@ public abstract class ValidBasicNetFsAbstract implements BasicNetFs {
 
 
     @Override
-    public byte[] read(String fileName) throws IOException {
+    public PdfsFileInputStream read(String fileName) throws IOException {
         if (fileNameInvalid(fileName)) {
             throw new IOException();
         }
@@ -17,7 +20,7 @@ public abstract class ValidBasicNetFsAbstract implements BasicNetFs {
     }
 
     @Override
-    public void write(String fileName, byte[] data) throws IOException {
+    public void write(String fileName, PdfsFileInputStream data) throws IOException {
         if (fileNameInvalid(fileName)) {
             throw new IOException();
         }
@@ -32,9 +35,9 @@ public abstract class ValidBasicNetFsAbstract implements BasicNetFs {
         deleteValid(fileName);
     }
 
-    public abstract byte[] readValid(String fileName) throws IOException;
+    public abstract PdfsFileInputStream readValid(String fileName) throws IOException;
 
-    public abstract void writeValid(String fileName, byte[] data) throws IOException;
+    public abstract void writeValid(String fileName, PdfsFileInputStream data) throws IOException;
 
     public abstract void deleteValid(String fileName) throws IOException;
 

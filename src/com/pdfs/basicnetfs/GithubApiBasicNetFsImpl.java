@@ -1,6 +1,8 @@
 package com.pdfs.basicnetfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pdfs.normalfs.PdfsFileInputStream;
+import com.pdfs.utils.Base64;
 import com.pdfs.utils.Hex;
 import com.pdfs.utils.SHA;
 import okhttp3.MediaType;
@@ -13,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Base64;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +34,7 @@ public class GithubApiBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public byte[] readValid(String fileName) throws IOException {
+    public PdfsFileInputStream readValid(String fileName) throws IOException {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .callTimeout(10, TimeUnit.MINUTES)
                 .connectTimeout(10, TimeUnit.MINUTES)
@@ -51,27 +53,22 @@ public class GithubApiBasicNetFsImpl extends ValidBasicNetFsAbstract {
         Response response = client.newCall(request).execute();
         log.info("github return {}", response.code());
         if (response.isSuccessful()) {
-            byte[] bytes = response.body().bytes();
-            log.info("github GET {} done", url);
-            response.body().close();
-            String src = new String(bytes);
-            bytes = Base64.getDecoder().decode(src);
-            return bytes;
+            InputStream inputStream = response.body().byteStream();
+            long length = response.body().contentLength();
+            return Base64.decode(new PdfsFileInputStream(length, inputStream));
         } else if (response.code() == 404) {
-            response.body().close();
             throw new FileNotFoundException();
         } else {
-            response.body().close();
             throw new RuntimeException(response.message());
         }
     }
 
     @Override
-    public void writeValid(String fileName, byte[] data) throws IOException {
-        byte[] old = null;
+    public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
+        PdfsFileInputStream old = null;
         try {
             old = readValid(fileName);
-            old = Base64.getEncoder().encode(old);
+            old = Base64.encode(old);
         } catch (Exception e) {
         }
 
@@ -84,13 +81,14 @@ public class GithubApiBasicNetFsImpl extends ValidBasicNetFsAbstract {
         MediaType mediaType = MediaType.parse("application/json");
         Map<String, String> params = new HashMap<>();
         params.put("message", "pdfs-github-api-upload");
-        data = Base64.getEncoder().encode(data);
-        params.put("content", new String(Base64.getEncoder().encode(data)));
+        data = Base64.encode(data);
+        // TODO
+        params.put("content", new String(Base64.encode(data).readAllBytes()));
         if (old != null) {
-            byte[] head = String.format("blob %d\0", old.length).getBytes();
-            byte[] sum = new byte[old.length + head.length];
+            byte[] head = String.format("blob %d\0", old.getFileSize()).getBytes();
+            byte[] sum = new byte[(int) (old.getFileSize() + head.length)];
             System.arraycopy(head, 0, sum, 0, head.length);
-            System.arraycopy(old, 0, sum, head.length, old.length);
+            System.arraycopy(old, 0, sum, head.length, (int) old.getFileSize());
             params.put("sha", Hex.encode(SHA.encode(sum)));
         }
 
