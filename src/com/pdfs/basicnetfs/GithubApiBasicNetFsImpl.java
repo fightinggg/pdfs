@@ -8,6 +8,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,6 +19,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class GithubApiBasicNetFsImpl extends ValidBasicNetFsAbstract {
+    Logger log = LoggerFactory.getLogger(GithubApiBasicNetFsImpl.class);
+
     String githubToken;
     String githubUsername;
     String githubRepoName;
@@ -35,16 +39,20 @@ public class GithubApiBasicNetFsImpl extends ValidBasicNetFsAbstract {
                 .readTimeout(10, TimeUnit.MINUTES)
                 .writeTimeout(10, TimeUnit.MINUTES)
                 .build();
+        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
         Request request = new Request.Builder()
-                .url(String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName))
+                .url(url)
                 .method("GET", null)
                 .addHeader("Authorization", "Bearer " + githubToken)
                 .addHeader("Accept", "application/vnd.github.v3.raw")
                 .addHeader("X-GitHub-Api-Version", "2022-11-28")
                 .build();
+        log.info("request to github GET {}", url);
         Response response = client.newCall(request).execute();
+        log.info("github return {}", response.code());
         if (response.isSuccessful()) {
             byte[] bytes = response.body().bytes();
+            log.info("github GET {} done", url);
             response.body().close();
             String src = new String(bytes);
             bytes = Base64.getDecoder().decode(src);
