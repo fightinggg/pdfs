@@ -49,17 +49,19 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         int block = 1 << 10; // 1KB
 
         try {
-            int totalSize = 0;
-            while (true) {
-                ByteBuf buffer = Unpooled.buffer(block);
-                int size = buffer.writeBytes(body, block);
-                if (size <= 0) {
-                    break;
-                }
-                totalSize += size;
-                ctx.writeAndFlush(buffer);
-            }
-            log.info("request reach END, send bytes={}", totalSize);
+            ctx.writeAndFlush(Unpooled.buffer().writeBytes(body.readAllBytes()));
+
+//            int totalSize = 0;
+//            while (true) {
+//                ByteBuf buffer = Unpooled.buffer(block);
+//                int size = buffer.writeBytes(body, block);
+//                if (size <= 0) {
+//                    break;
+//                }
+//                totalSize += size;
+//                ctx.writeAndFlush(buffer);
+//            }
+//            log.info("request reach END, send bytes={}", totalSize);
         } catch (Exception e) {
             log.error("", e);
         } finally {
