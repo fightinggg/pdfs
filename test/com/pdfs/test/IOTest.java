@@ -1,18 +1,10 @@
 package com.pdfs.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pdfs.extendnetfs.ExtendableNetFs;
-import com.pdfs.basicnetfs.LocalFileSystemExtendableNetFsImpl;
-import com.pdfs.extendnetfs.encryptionfs.AesEncryptionFsImpl;
-import com.pdfs.extendnetfs.encryptionfs.EncryptionFs;
-import com.pdfs.normalfs.FileNormalFsImpl;
-import com.pdfs.extendnetfs.signfs.Md5SignFsImpl;
-import com.pdfs.extendnetfs.signfs.SignFs;
-import com.pdfs.reliable.PolinDistributeFsClusters;
+import com.pdfs.reliable.PolinDistributeFsCluster;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,11 +18,25 @@ public class IOTest {
         config.put("key", "wow! pdfs!");
         config.put("local_path", "./local_1");
 
-        PolinDistributeFsClusters polinDistributeFsClusters = new PolinDistributeFsClusters(config);
+        PolinDistributeFsCluster polinDistributeFsCluster = new PolinDistributeFsCluster(config);
 
-        List<PolinDistributeFsClusters.NetFsDisk> disks = polinDistributeFsClusters.getDisks();
+        List<PolinDistributeFsCluster.NetFsDisk> disks = polinDistributeFsCluster.getDisks();
 
         System.out.println(new ObjectMapper().writeValueAsString(disks));
+
+
+        for (int i = 0; i < 5; i++) {
+            config = new HashMap<>();
+            config.put("group", "local");
+            config.put("name", "local_2");
+            config.put("type", "local");
+            config.put("key", "wow! pdfs!");
+            config.put("local_path", "./local_1");
+            polinDistributeFsCluster.addConfig(config);
+        }
+
+        System.out.println(new ObjectMapper().writeValueAsString(disks));
+
 
 
     }

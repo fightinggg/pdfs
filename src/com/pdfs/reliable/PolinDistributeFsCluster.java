@@ -3,7 +3,6 @@ package com.pdfs.reliable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.pdfs.extendnetfs.ExtendableNetFs;
 import com.pdfs.fsfactory.Factory;
 import com.pdfs.normalfs.PdfsFileInputStream;
@@ -13,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,9 +19,9 @@ import java.util.Map;
 /**
  * clusters infomation
  */
-public class PolinDistributeFsClusters {
+public class PolinDistributeFsCluster {
 
-    private static final Logger log = LoggerFactory.getLogger(PolinDistributeFsClusters.class);
+    private static final Logger log = LoggerFactory.getLogger(PolinDistributeFsCluster.class);
 
     @Data
     @NoArgsConstructor
@@ -57,7 +55,7 @@ public class PolinDistributeFsClusters {
     Cluster cluster = new Cluster();
 
 
-    public PolinDistributeFsClusters(Map<String, String> config) {
+    public PolinDistributeFsCluster(Map<String, String> config) {
         addConfig(config);
     }
 
@@ -123,7 +121,7 @@ public class PolinDistributeFsClusters {
     }
 
 
-    synchronized void addConfig(Map<String, String> config) {
+    public synchronized void addConfig(Map<String, String> config) {
         if (config.containsKey("group")) {
             String group = config.get("group");
             cluster.disks.computeIfAbsent(group, s -> new NetFsDisk(group, new HashMap<>()));
