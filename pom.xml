@@ -128,7 +128,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.pdfs.Main</mainClass>
+                            <mainClass>com.pdfs.launch.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

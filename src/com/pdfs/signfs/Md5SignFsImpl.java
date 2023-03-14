@@ -1,9 +1,9 @@
 package com.pdfs.signfs;
 
 import com.pdfs.basicnetfs.BasicNetFs;
+import com.pdfs.normalfs.PdfsFileInputStream;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
@@ -16,8 +16,8 @@ public class Md5SignFsImpl implements SignFs {
     }
 
     @Override
-    public InputStream read(String fileName) throws IOException {
-        byte[] read = basicNetFs.read(fileName);
+    public PdfsFileInputStream read(String fileName) throws IOException {
+        byte[] read = basicNetFs.read(fileName).readAllBytes();
         byte[] res = new byte[read.length - 16];
         byte[] digest = new byte[16];
         System.arraycopy(read, 0, digest, 0, 16);
@@ -32,12 +32,15 @@ public class Md5SignFsImpl implements SignFs {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return res;
+        return PdfsFileInputStream.fromBytes(res);
     }
 
     @Override
-    public void write(String fileName, InputStream data) throws IOException {
+    public void write(String fileName, PdfsFileInputStream in) throws IOException {
         try {
+            byte[] data = in.readAllBytes();
+
+
             MessageDigest md5 = MessageDigest.getInstance("md5");
             byte[] digest = md5.digest(data);
             if (digest.length != 16) {
@@ -46,7 +49,7 @@ public class Md5SignFsImpl implements SignFs {
             byte[] digestWithData = new byte[16 + data.length];
             System.arraycopy(digest, 0, digestWithData, 0, 16);
             System.arraycopy(data, 0, digestWithData, 16, data.length);
-            basicNetFs.write(fileName, digestWithData);
+            basicNetFs.write(fileName, PdfsFileInputStream.fromBytes(digestWithData));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

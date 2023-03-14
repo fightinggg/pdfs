@@ -1,5 +1,6 @@
 package com.pdfs.basicnetfs;
 
+import com.pdfs.normalfs.PdfsFileInputStream;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public InputStream readValid(String fileName) throws IOException {
+    public PdfsFileInputStream readValid(String fileName) throws IOException {
         try {
             init();
 
@@ -54,7 +55,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
             FileInputStream fileInputStream = new FileInputStream(localGitRepo + "/" + fileName);
             byte[] bytes = fileInputStream.readAllBytes();
             fileInputStream.close();
-            return bytes;
+            return PdfsFileInputStream.fromBytes(bytes);
         } catch (FileNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -93,7 +94,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public void writeValid(String fileName, InputStream data) throws IOException {
+    public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
         try {
 
             init();
@@ -104,7 +105,7 @@ public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "checkout", fileName}, null, new File(localGitRepo)));
 
             FileOutputStream fileOutputStream = new FileOutputStream(localGitRepo + "/" + fileName);
-            fileOutputStream.write(data);
+            fileOutputStream.write(data.readAllBytes());
             fileOutputStream.close();
 
             awaitExec(Runtime.getRuntime().exec(new String[]{"git", "add", fileName}, null, new File(localGitRepo)));

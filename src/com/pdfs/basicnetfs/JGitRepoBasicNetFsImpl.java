@@ -17,7 +17,7 @@ public class JGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
 
     Git git;
 
-    public JGitRepoBasicNetFsImpl(InputStream primaryKey, String repoAddress) {
+    public JGitRepoBasicNetFsImpl(byte[] primaryKey, String repoAddress) {
         InMemoryRepository.Builder builder = new InMemoryRepository.Builder();
         try {
 

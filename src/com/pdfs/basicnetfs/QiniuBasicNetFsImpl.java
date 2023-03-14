@@ -1,6 +1,7 @@
 package com.pdfs.basicnetfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pdfs.normalfs.PdfsFileInputStream;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import com.qiniu.storage.Configuration;
@@ -34,7 +35,7 @@ public class QiniuBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public InputStream readValid(String fileName) throws IOException {
+    public PdfsFileInputStream readValid(String fileName) throws IOException {
         // domain   下载 domain, eg: qiniu.com【必须】
 // useHttps 是否使用 https【必须】
 // key      下载资源在七牛云存储的 key【必须】
@@ -48,7 +49,7 @@ public class QiniuBasicNetFsImpl extends ValidBasicNetFsAbstract {
     }
 
     @Override
-    public void writeValid(String fileName, InputStream data) throws IOException {
+    public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
 //构造一个带指定 Region 对象的配置类
         Configuration cfg = new Configuration(Region.region2());
         cfg.resumableUploadAPIVersion = Configuration.ResumableUploadAPIVersion.V2;// 指定分片上传版本
@@ -61,7 +62,7 @@ public class QiniuBasicNetFsImpl extends ValidBasicNetFsAbstract {
 //默认不指定key的情况下，以文件内容的hash值作为文件名
         String key = fileName;
 
-        byte[] uploadBytes = data;
+        byte[] uploadBytes = data.readAllBytes();
         Auth auth = Auth.create(accessKey, secretKey);
         String upToken = auth.uploadToken(bucket);
 

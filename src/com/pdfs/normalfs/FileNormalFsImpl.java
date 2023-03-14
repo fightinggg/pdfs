@@ -1,19 +1,22 @@
 package com.pdfs.normalfs;
 
-import com.pdfs.utils.AES;
-import com.pdfs.utils.Hex;
-import com.pdfs.encryptionfs.EncryptionFs;
+import com.pdfs.basicnetfs.BasicNetFs;
 import com.pdfs.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class FileNormalFsImpl implements NormalFs {
 
@@ -21,25 +24,18 @@ public class FileNormalFsImpl implements NormalFs {
 
     private static final long maxFileSize = 1 << 20;//1MB
 
-    private static final String pathPrefix = "path=";
-    private static final String filePrefix = "file=";
+    private static final String pathPrefix = "path";
+    private static final String filePrefix = "file";
 
-    byte[] fileNameKey;
-    EncryptionFs encryptionFs;
+    BasicNetFs basicNetFs;
 
 
-    public FileNormalFsImpl(byte[] fileNameKey, EncryptionFs encryptionFs) {
-        this.fileNameKey = fileNameKey;
-        this.encryptionFs = encryptionFs;
+    public FileNormalFsImpl(BasicNetFs basicNetFs) {
+        this.basicNetFs = basicNetFs;
     }
 
     private String encodeName(int block, String prefix, String name) {
-        // key = 0, for debug
-        if (fileNameKey.length == 0) {
-            return block + "_" + prefix + name.replace("/", "-") + ".txt";
-        }
-        byte[] pathName = (block + prefix + name).getBytes(StandardCharsets.UTF_8);
-        return Hex.encode(AES.encode(pathName, fileNameKey)) + ".bin";
+        return block + "/" + prefix + "/" + name;
     }
 
     private List<Object> getSizeFromFileSizeEncode(byte[] data) {
@@ -62,7 +58,7 @@ public class FileNormalFsImpl implements NormalFs {
             throw new RuntimeException("Valid path=" + path);
         }
         try {
-            byte[] read = encryptionFs.read(encodeName(0, filePrefix, path));
+            byte[] read = basicNetFs.read(encodeName(0, filePrefix, path)).readAllBytes();
             List<Object> decodeSizeWithData = getSizeFromFileSizeEncode(read);
             long fileTotalSize = (long) decodeSizeWithData.get(0);
             long validSize = Math.min(size, fileTotalSize - from);
@@ -82,7 +78,7 @@ public class FileNormalFsImpl implements NormalFs {
                             readData = (byte[]) decodeSizeWithData.get(1);
                         } else {
                             try {
-                                readData = encryptionFs.read(encodeName(finalI, filePrefix, path));
+                                readData = basicNetFs.read(encodeName(finalI, filePrefix, path)).readAllBytes();
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -131,14 +127,14 @@ public class FileNormalFsImpl implements NormalFs {
                 size /= 256;
             }
 
-            encryptionFs.write(encodeName(0, filePrefix, path), data2);
+            basicNetFs.write(encodeName(0, filePrefix, path), PdfsFileInputStream.fromBytes(data2));
         } else {
             byte[] data = inputStream.readAllBytes();
             if (data.length != maxFileSize && total - from + 1 > maxFileSize) {
                 throw new RuntimeException("参数非法");
             }
 
-            encryptionFs.write(encodeName((int) (from / maxFileSize), filePrefix, path), data);
+            basicNetFs.write(encodeName((int) (from / maxFileSize), filePrefix, path), PdfsFileInputStream.fromBytes(data));
         }
 
         // 2. write dir
@@ -160,10 +156,10 @@ public class FileNormalFsImpl implements NormalFs {
                         .map(o -> (o.isDir ? "1" : "0") + o.name)
                         .collect(Collectors.joining("\n"));
 
-                encryptionFs.write(encodeName(0, pathPrefix, dir), disContent.getBytes(StandardCharsets.UTF_8));
+                basicNetFs.write(encodeName(0, pathPrefix, dir), PdfsFileInputStream.fromBytes(disContent.getBytes(StandardCharsets.UTF_8)));
             }
         } catch (FileNotFoundException fileNotFoundException) {
-            encryptionFs.write(encodeName(0, pathPrefix, dir), ((isDir ? "1" : "0") + path).getBytes(StandardCharsets.UTF_8));
+            basicNetFs.write(encodeName(0, pathPrefix, dir), PdfsFileInputStream.fromBytes(((isDir ? "1" : "0") + path).getBytes(StandardCharsets.UTF_8)));
             dirAddItem(dir, true);
         }
 
@@ -187,7 +183,7 @@ public class FileNormalFsImpl implements NormalFs {
         String name = encodeName(0, pathPrefix, path);
 
         try {
-            byte[] read = encryptionFs.read(name);
+            byte[] read = basicNetFs.read(name).readAllBytes();
             return Arrays.stream(new String(read).split("\n"))
                     .map(o -> new File(o.substring(1), o.charAt(0) == '1'))
                     .collect(Collectors.toList());

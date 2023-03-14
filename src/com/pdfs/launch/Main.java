@@ -1,4 +1,4 @@
-package com.pdfs;
+package com.pdfs.launch;
 
 import com.pdfs.server.HttpServer;
 import org.apache.commons.cli.CommandLine;

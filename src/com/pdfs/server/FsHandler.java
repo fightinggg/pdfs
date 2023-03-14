@@ -5,14 +5,9 @@ import com.pdfs.normalfs.NormalFs;
 import com.pdfs.server.fshander.FsReadHandler;
 import com.pdfs.server.fshander.FsWebLsHandler;
 import com.pdfs.server.fshander.FsWriteBigHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 public class FsHandler {
@@ -31,7 +26,7 @@ public class FsHandler {
         fsWebLsHandler = new FsWebLsHandler(fs);
     }
 
-    synchronized HttpRsp httpHandler(String url, String method, InputStream inputStream) throws IOException {
+    HttpRsp httpHandler(String url, String method, InputStream inputStream) throws IOException {
         if (method.equals("GET") && url.startsWith("/fsapi/read/")) {
             return fsReadHandler.readHandler(url, method, inputStream);
         }
