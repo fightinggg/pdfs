@@ -1,30 +1,29 @@
-package com.pdfs.encryptionfs;
+package com.pdfs.extendnetfs.encryptionfs;
 
-import com.pdfs.basicnetfs.BasicNetFs;
+import com.pdfs.extendnetfs.ExtendableNetFs;
 import com.pdfs.normalfs.PdfsFileInputStream;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 public class NoEncryptionFsImpl implements EncryptionFs {
 
-    BasicNetFs basicNetFs;
+    ExtendableNetFs extendableNetFs;
 
-    public NoEncryptionFsImpl(BasicNetFs basicNetFs) {
-        this.basicNetFs = basicNetFs;
+    public NoEncryptionFsImpl(ExtendableNetFs extendableNetFs) {
+        this.extendableNetFs = extendableNetFs;
     }
 
     public PdfsFileInputStream read(String fileName) throws IOException {
-        return basicNetFs.read(fileName);
+        return extendableNetFs.read(fileName);
     }
 
     public void write(String fileName, PdfsFileInputStream data) throws IOException {
-        basicNetFs.write(fileName, data);
+        extendableNetFs.write(fileName, data);
     }
 
     @Override
     public void delete(String fileName) throws IOException {
-        basicNetFs.delete(fileName);
+        extendableNetFs.delete(fileName);
     }
 
 

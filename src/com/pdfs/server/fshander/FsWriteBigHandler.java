@@ -1,6 +1,5 @@
 package com.pdfs.server.fshander;
 
-import com.pdfs.fs.Factory;
 import com.pdfs.normalfs.NormalFs;
 import com.pdfs.server.HttpRsp;
 import org.slf4j.Logger;
@@ -8,10 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 
 public class FsWriteBigHandler {
     Logger log = LoggerFactory.getLogger(FsReadHandler.class);

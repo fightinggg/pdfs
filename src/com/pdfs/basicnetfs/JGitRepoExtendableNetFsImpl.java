@@ -13,11 +13,11 @@ import org.eclipse.jgit.util.FS;
 
 import java.io.*;
 
-public class JGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
+public class JGitRepoExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     Git git;
 
-    public JGitRepoBasicNetFsImpl(byte[] primaryKey, String repoAddress) {
+    public JGitRepoExtendableNetFsImpl(byte[] primaryKey, String repoAddress) {
         InMemoryRepository.Builder builder = new InMemoryRepository.Builder();
         try {
 

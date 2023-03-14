@@ -1,11 +1,11 @@
 package com.pdfs.basicnetfs;
 
+import com.pdfs.extendnetfs.ExtendableNetFs;
 import com.pdfs.normalfs.PdfsFileInputStream;
 
 import java.io.IOException;
-import java.io.InputStream;
 
-public abstract class ValidBasicNetFsAbstract implements BasicNetFs {
+public abstract class ValidExtendableNetFsAbstract implements BasicNetFs {
     private boolean fileNameInvalid(String fileName) {
         return fileName.contains("\\") || fileName.contains("/") || fileName.contains("\n");
     }

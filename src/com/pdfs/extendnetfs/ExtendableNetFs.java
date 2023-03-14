@@ -1,16 +1,15 @@
-package com.pdfs.basicnetfs;
+package com.pdfs.extendnetfs;
 
 import com.pdfs.normalfs.PdfsFileInputStream;
 
 import java.io.IOException;
 
 /**
- * basic net fs only support for simple file IO
+ * extend net fs
  */
-public interface BasicNetFs {
+public interface ExtendableNetFs {
     /**
      * only can read filename without '/'
-     * every file is ?MB
      */
     PdfsFileInputStream read(String fileName) throws IOException;
 

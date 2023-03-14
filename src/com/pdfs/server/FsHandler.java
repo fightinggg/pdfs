@@ -1,6 +1,6 @@
 package com.pdfs.server;
 
-import com.pdfs.fs.Factory;
+import com.pdfs.fsfactory.Factory;
 import com.pdfs.normalfs.NormalFs;
 import com.pdfs.server.fshander.FsReadHandler;
 import com.pdfs.server.fshander.FsWebLsHandler;
@@ -19,7 +19,7 @@ public class FsHandler {
     FsWebLsHandler fsWebLsHandler;
 
     public FsHandler(Map<String, String> config) {
-        fs = Factory.getFs(config);
+        fs = Factory.getNormalFs(config);
 
         fsWriteBigHandler = new FsWriteBigHandler(fs);
         fsReadHandler = new FsReadHandler(fs);

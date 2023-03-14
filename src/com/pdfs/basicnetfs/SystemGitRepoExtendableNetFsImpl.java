@@ -8,15 +8,15 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class SystemGitRepoBasicNetFsImpl extends ValidBasicNetFsAbstract {
+public class SystemGitRepoExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
-    Logger log = LoggerFactory.getLogger(SystemGitRepoBasicNetFsImpl.class);
+    Logger log = LoggerFactory.getLogger(SystemGitRepoExtendableNetFsImpl.class);
 
     String localGitRepo;
     String remoteGitRepo;
     String pk;
 
-    public SystemGitRepoBasicNetFsImpl(String localGitRepo, String remoteGitRepo, String pk) {
+    public SystemGitRepoExtendableNetFsImpl(String localGitRepo, String remoteGitRepo, String pk) {
         this.localGitRepo = localGitRepo;
         this.remoteGitRepo = remoteGitRepo;
         this.pk = pk;

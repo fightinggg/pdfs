@@ -20,14 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class GithubApiBasicNetFsImpl extends ValidBasicNetFsAbstract {
-    Logger log = LoggerFactory.getLogger(GithubApiBasicNetFsImpl.class);
+public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
+    Logger log = LoggerFactory.getLogger(GithubApiExtendableNetFsImpl.class);
 
     String githubToken;
     String githubUsername;
     String githubRepoName;
 
-    public GithubApiBasicNetFsImpl(String githubToken, String githubUsername, String githubRepoName) {
+    public GithubApiExtendableNetFsImpl(String githubToken, String githubUsername, String githubRepoName) {
         this.githubToken = githubToken;
         this.githubUsername = githubUsername;
         this.githubRepoName = githubRepoName;

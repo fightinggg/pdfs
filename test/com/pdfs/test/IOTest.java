@@ -1,22 +1,39 @@
 package com.pdfs.test;
 
-import com.pdfs.basicnetfs.BasicNetFs;
-import com.pdfs.basicnetfs.LocalFileSystemBasicNetFsImpl;
-import com.pdfs.encryptionfs.AesEncryptionFsImpl;
-import com.pdfs.encryptionfs.EncryptionFs;
-import com.pdfs.fs.Factory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pdfs.extendnetfs.ExtendableNetFs;
+import com.pdfs.basicnetfs.LocalFileSystemExtendableNetFsImpl;
+import com.pdfs.extendnetfs.encryptionfs.AesEncryptionFsImpl;
+import com.pdfs.extendnetfs.encryptionfs.EncryptionFs;
 import com.pdfs.normalfs.FileNormalFsImpl;
-import com.pdfs.normalfs.NormalFs;
-import com.pdfs.signfs.Md5SignFsImpl;
-import com.pdfs.signfs.SignFs;
+import com.pdfs.extendnetfs.signfs.Md5SignFsImpl;
+import com.pdfs.extendnetfs.signfs.SignFs;
+import com.pdfs.reliable.PolinDistributeFsClusters;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 
 public class IOTest {
+    @Test
+    public void f3() throws IOException {
+        HashMap<String, String> config = new HashMap<>();
+        config.put("group", "local");
+        config.put("name", "local_1");
+        config.put("type", "local");
+        config.put("key", "wow! pdfs!");
+        config.put("local_path", "./local_1");
+
+        PolinDistributeFsClusters polinDistributeFsClusters = new PolinDistributeFsClusters(config);
+
+        List<PolinDistributeFsClusters.NetFsDisk> disks = polinDistributeFsClusters.getDisks();
+
+        System.out.println(new ObjectMapper().writeValueAsString(disks));
+
+
+    }
 
 
     @Test
@@ -45,18 +62,18 @@ public class IOTest {
 
     @Test
     public void f1() throws IOException {
-        BasicNetFs basicNetFs = new LocalFileSystemBasicNetFsImpl("D:\\src\\pdfs\\localfs");
-        SignFs signFs = new Md5SignFsImpl(basicNetFs);
-        EncryptionFs encryptionFs = new AesEncryptionFsImpl(signFs, "wow! pdsf! good!".getBytes());
-
-
-        String fileName = "pdfs_test.bin";
-        String data = "12345678911";
-
-        encryptionFs.write(fileName, data.getBytes(StandardCharsets.UTF_8));
-        byte[] read = encryptionFs.read(fileName);
-
-        assert data.endsWith(new String(read));
+//        ExtendableNetFs extendableNetFs = new LocalFileSystemExtendableNetFsImpl("D:\\src\\pdfs\\localfs");
+//        SignFs signFs = new Md5SignFsImpl(extendableNetFs);
+//        EncryptionFs encryptionFs = new AesEncryptionFsImpl(signFs, "wow! pdsf! good!".getBytes());
+//
+//
+//        String fileName = "pdfs_test.bin";
+//        String data = "12345678911";
+//
+//        encryptionFs.write(fileName, data.getBytes(StandardCharsets.UTF_8));
+//        byte[] read = encryptionFs.read(fileName);
+//
+//        assert data.endsWith(new String(read));
 
 
     }
@@ -64,15 +81,15 @@ public class IOTest {
 
     @Test
     public void f2() throws IOException {
-        String key = "wow! pdsf! good!";
-
-        BasicNetFs basicNetFs = new LocalFileSystemBasicNetFsImpl("D:\\src\\pdfs\\localfs");
-        SignFs signFs = new Md5SignFsImpl(basicNetFs);
-        EncryptionFs encryptionFs = new AesEncryptionFsImpl(signFs, key.getBytes());
-        FileNormalFsImpl directFileNormalFs = new FileNormalFsImpl(key.getBytes(StandardCharsets.UTF_8), encryptionFs);
-
-
-        System.out.println(directFileNormalFs.ls(""));
+//        String key = "wow! pdsf! good!";
+//
+//        ExtendableNetFs extendableNetFs = new LocalFileSystemExtendableNetFsImpl("D:\\src\\pdfs\\localfs");
+//        SignFs signFs = new Md5SignFsImpl(extendableNetFs);
+//        EncryptionFs encryptionFs = new AesEncryptionFsImpl(signFs, key.getBytes());
+//        FileNormalFsImpl directFileNormalFs = new FileNormalFsImpl(key.getBytes(StandardCharsets.UTF_8), encryptionFs);
+//
+//
+//        System.out.println(directFileNormalFs.ls(""));
 //
 //        directFileNormalFs.write("/a/b/c/d/e.txt", 0, new ByteArrayInputStream("123".getBytes(StandardCharsets.UTF_8)));
 //

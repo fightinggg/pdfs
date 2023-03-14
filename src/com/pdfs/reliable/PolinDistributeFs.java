@@ -1,13 +1,13 @@
 package com.pdfs.reliable;
 
-import com.pdfs.basicnetfs.BasicNetFs;
+import com.pdfs.extendnetfs.ExtendableNetFs;
 import com.pdfs.normalfs.PdfsFileInputStream;
 
 import java.io.IOException;
 import java.util.List;
 
-public class PolinDistributeFs implements BasicNetFs {
-    List<BasicNetFs> basicNetFs;
+public class PolinDistributeFs implements ExtendableNetFs {
+    List<ExtendableNetFs> extendableNetFS;
 
 
     @Override

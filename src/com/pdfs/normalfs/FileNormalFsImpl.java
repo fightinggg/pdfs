@@ -1,6 +1,6 @@
 package com.pdfs.normalfs;
 
-import com.pdfs.basicnetfs.BasicNetFs;
+import com.pdfs.extendnetfs.ExtendableNetFs;
 import com.pdfs.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +27,11 @@ public class FileNormalFsImpl implements NormalFs {
     private static final String pathPrefix = "path";
     private static final String filePrefix = "file";
 
-    BasicNetFs basicNetFs;
+    ExtendableNetFs extendableNetFs;
 
 
-    public FileNormalFsImpl(BasicNetFs basicNetFs) {
-        this.basicNetFs = basicNetFs;
+    public FileNormalFsImpl(ExtendableNetFs extendableNetFs) {
+        this.extendableNetFs = extendableNetFs;
     }
 
     private String encodeName(int block, String prefix, String name) {
@@ -58,7 +58,7 @@ public class FileNormalFsImpl implements NormalFs {
             throw new RuntimeException("Valid path=" + path);
         }
         try {
-            byte[] read = basicNetFs.read(encodeName(0, filePrefix, path)).readAllBytes();
+            byte[] read = extendableNetFs.read(encodeName(0, filePrefix, path)).readAllBytes();
             List<Object> decodeSizeWithData = getSizeFromFileSizeEncode(read);
             long fileTotalSize = (long) decodeSizeWithData.get(0);
             long validSize = Math.min(size, fileTotalSize - from);
@@ -78,7 +78,7 @@ public class FileNormalFsImpl implements NormalFs {
                             readData = (byte[]) decodeSizeWithData.get(1);
                         } else {
                             try {
-                                readData = basicNetFs.read(encodeName(finalI, filePrefix, path)).readAllBytes();
+                                readData = extendableNetFs.read(encodeName(finalI, filePrefix, path)).readAllBytes();
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -127,14 +127,14 @@ public class FileNormalFsImpl implements NormalFs {
                 size /= 256;
             }
 
-            basicNetFs.write(encodeName(0, filePrefix, path), PdfsFileInputStream.fromBytes(data2));
+            extendableNetFs.write(encodeName(0, filePrefix, path), PdfsFileInputStream.fromBytes(data2));
         } else {
             byte[] data = inputStream.readAllBytes();
             if (data.length != maxFileSize && total - from + 1 > maxFileSize) {
                 throw new RuntimeException("参数非法");
             }
 
-            basicNetFs.write(encodeName((int) (from / maxFileSize), filePrefix, path), PdfsFileInputStream.fromBytes(data));
+            extendableNetFs.write(encodeName((int) (from / maxFileSize), filePrefix, path), PdfsFileInputStream.fromBytes(data));
         }
 
         // 2. write dir
@@ -156,10 +156,10 @@ public class FileNormalFsImpl implements NormalFs {
                         .map(o -> (o.isDir ? "1" : "0") + o.name)
                         .collect(Collectors.joining("\n"));
 
-                basicNetFs.write(encodeName(0, pathPrefix, dir), PdfsFileInputStream.fromBytes(disContent.getBytes(StandardCharsets.UTF_8)));
+                extendableNetFs.write(encodeName(0, pathPrefix, dir), PdfsFileInputStream.fromBytes(disContent.getBytes(StandardCharsets.UTF_8)));
             }
         } catch (FileNotFoundException fileNotFoundException) {
-            basicNetFs.write(encodeName(0, pathPrefix, dir), PdfsFileInputStream.fromBytes(((isDir ? "1" : "0") + path).getBytes(StandardCharsets.UTF_8)));
+            extendableNetFs.write(encodeName(0, pathPrefix, dir), PdfsFileInputStream.fromBytes(((isDir ? "1" : "0") + path).getBytes(StandardCharsets.UTF_8)));
             dirAddItem(dir, true);
         }
 
@@ -183,7 +183,7 @@ public class FileNormalFsImpl implements NormalFs {
         String name = encodeName(0, pathPrefix, path);
 
         try {
-            byte[] read = basicNetFs.read(name).readAllBytes();
+            byte[] read = extendableNetFs.read(name).readAllBytes();
             return Arrays.stream(new String(read).split("\n"))
                     .map(o -> new File(o.substring(1), o.charAt(0) == '1'))
                     .collect(Collectors.toList());

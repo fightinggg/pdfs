@@ -15,20 +15,18 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 /**
  * 七牛云需要绑定一个域名
  *
  */
-public class QiniuBasicNetFsImpl extends ValidBasicNetFsAbstract {
-    Logger log = LoggerFactory.getLogger(QiniuBasicNetFsImpl.class);
+public class QiniuExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
+    Logger log = LoggerFactory.getLogger(QiniuExtendableNetFsImpl.class);
     String accessKey;
     String secretKey;
     String bucket;
 
-    public QiniuBasicNetFsImpl(String accessKey, String secretKey, String bucket) {
+    public QiniuExtendableNetFsImpl(String accessKey, String secretKey, String bucket) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.bucket = bucket;

@@ -1,8 +1,10 @@
 package com.pdfs.reliable;
 
 public class PolinDistributeConfigs {
-    String systemPathPrefix = "0";
-    String userPathPrefix = "1";
+    public static final String systemPathPrefix = "0";
+    public static final String userPathPrefix = "1";
+
+    public static final String clusterFileName = PolinDistributeConfigs.systemPathPrefix + "clusters.txt";
 
 
 }
