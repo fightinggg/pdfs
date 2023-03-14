@@ -69,7 +69,7 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         try {
             old = readValid(fileName);
             old = Base64.encode(old);
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
         }
 
         OkHttpClient client = new OkHttpClient().newBuilder()
@@ -88,7 +88,7 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
             byte[] head = String.format("blob %d\0", old.getFileSize()).getBytes();
             byte[] sum = new byte[(int) (old.getFileSize() + head.length)];
             System.arraycopy(head, 0, sum, 0, head.length);
-            System.arraycopy(old, 0, sum, head.length, (int) old.getFileSize());
+            System.arraycopy(old.readAllBytes(), 0, sum, head.length, (int) old.getFileSize());
             params.put("sha", Hex.encode(SHA.encode(sum)));
         }
 
