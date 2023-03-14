@@ -75,7 +75,7 @@ public class Factory {
         }
 
         String key = config.get("key");
-        while (key.length() < 32) {
+        while (!Objects.equals(key, "") && key.length() < 32) {
             key = key + " ";
         }
         return key;

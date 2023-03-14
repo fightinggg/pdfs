@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * clusters infomation
@@ -90,6 +91,10 @@ public class PolinDistributeFsCluster {
                 });
                 if (remoteCluster.version > this.cluster.version) {
                     this.cluster = remoteCluster;
+                    remoteCluster.disks.forEach((s, netFsDisk) -> netFsDisk.basicNetFs.forEach((s1, namedBasicNetFs1) -> {
+                        Map<String, String> config = namedBasicNetFs1.getConfig();
+                        namedBasicNetFs1.extendableNetFs = Factory.getExtendNetFs(config);
+                    }));
                     hasSync = false;
                 }
             } catch (FileNotFoundException e) {

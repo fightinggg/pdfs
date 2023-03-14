@@ -15,8 +15,9 @@ public class IOTest {
         config.put("group", "local");
         config.put("name", "local_1");
         config.put("type", "local");
-        config.put("key", "wow! pdfs!");
-        config.put("local_path", "./local_1");
+        config.put("key", "");
+//        config.put("sign", "false");
+        config.put("local_path", "./local/1");
 
         PolinDistributeFsCluster polinDistributeFsCluster = new PolinDistributeFsCluster(config);
 
@@ -25,18 +26,18 @@ public class IOTest {
         System.out.println(new ObjectMapper().writeValueAsString(disks));
 
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 0; i++) {
             config = new HashMap<>();
             config.put("group", "local");
-            config.put("name", "local_2");
+            config.put("name", "local/" + i);
             config.put("type", "local");
-            config.put("key", "wow! pdfs!");
-            config.put("local_path", "./local_1");
+            config.put("key", "");
+//            config.put("sign", "false");
+            config.put("local_path", "./local/" + i);
             polinDistributeFsCluster.addConfig(config);
         }
 
-        System.out.println(new ObjectMapper().writeValueAsString(disks));
-
+        System.out.println(new ObjectMapper().writeValueAsString(polinDistributeFsCluster.getDisks()));
 
 
     }
