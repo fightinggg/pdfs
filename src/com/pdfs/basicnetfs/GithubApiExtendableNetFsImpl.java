@@ -6,6 +6,7 @@ import com.pdfs.utils.Base64;
 import com.pdfs.utils.Hex;
 import com.pdfs.utils.SHA;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,22 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     @Override
     public PdfsFileInputStream readValid(String fileName) throws IOException {
+        try {
+            return _readValid(fileName);
+        } catch (FileNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ex) {
+                log.warn("", ex);
+            }
+            return _readValid(fileName);
+        }
+    }
+
+    @NotNull
+    private PdfsFileInputStream _readValid(String fileName) throws IOException {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .callTimeout(10, TimeUnit.MINUTES)
                 .connectTimeout(10, TimeUnit.MINUTES)
