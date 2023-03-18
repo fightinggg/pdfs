@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @ChannelHandler.Sharable
@@ -58,12 +59,6 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
         final boolean[] connect = {true};
 
-        ctx.disconnect().addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                connect[0] = false;
-            }
-        });
 
         try {
             long totalSize = 0;
@@ -74,7 +69,12 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     break;
                 }
                 totalSize += size;
-                ctx.writeAndFlush(buffer);
+                ctx.writeAndFlush(buffer).addListener((ChannelFutureListener) future -> {
+                    if (future.state().equals(Future.State.FAILED)) {
+                        log.error("failed: {}", future);
+                        connect[0] = false;
+                    }
+                });
             }
             log.info("send connect={}, bytes={}", connect[0], totalSize);
         } catch (Exception e) {
@@ -82,5 +82,15 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         } finally {
             ctx.writeAndFlush(Unpooled.buffer()).addListener(ChannelFutureListener.CLOSE);
         }
+    }
+
+    @Override
+    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+        super.disconnect(ctx, promise);
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        super.handlerRemoved(ctx);
     }
 }
