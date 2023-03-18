@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class FsReadHandler {
 
     public HttpRsp readHandler(String url, String method, InputStream inputStream) throws IOException {
         String path = url.substring("/fsapi/read/".length() - 1);
+        path = URLDecoder.decode(path, StandardCharsets.UTF_8);
 
         try {
             PdfsFileInputStream read = fs.read(path, 0, 999999999999L);

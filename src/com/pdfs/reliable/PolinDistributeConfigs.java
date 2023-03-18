@@ -6,5 +6,7 @@ public class PolinDistributeConfigs {
 
     public static final String clusterFileName = PolinDistributeConfigs.systemPathPrefix + "clusters.txt";
 
+    public static final String partKvFileName = PolinDistributeConfigs.systemPathPrefix + "partKv.txt";
+
 
 }

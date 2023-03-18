@@ -1,5 +1,6 @@
 package com.pdfs.server;
 
+import com.pdfs.server.fshander.SecureSocketSslContextFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -12,9 +13,13 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.OpenSslEngine;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLEngine;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
@@ -39,6 +44,9 @@ public class HttpServer {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
                         ChannelPipeline pipeline = channel.pipeline();
+//                        SSLEngine sslEngine = SecureSocketSslContextFactory.getServerContext().createSSLEngine();
+//                        sslEngine.setUseClientMode(false);
+//                        pipeline.addLast(new SslHandler(sslEngine));
                         pipeline.addLast(new HttpRequestDecoder());// http 编解码
                         pipeline.addLast("httpAggregator", new HttpObjectAggregator(2 * 1024 * 1024)); // 2MB                                                                    512*1024为接收的最大contentlength
                         pipeline.addLast(new HttpRequestHandler(config));// 请求处理器

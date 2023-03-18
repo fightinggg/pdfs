@@ -2,3 +2,4 @@ localfs/*
 target/*
 .idea/*
 pdfs.iml
+local/*

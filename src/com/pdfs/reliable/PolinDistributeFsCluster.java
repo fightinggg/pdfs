@@ -12,10 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 /**
  * clusters infomation
@@ -32,7 +31,6 @@ public class PolinDistributeFsCluster {
         @JsonIgnore
         ExtendableNetFs extendableNetFs;
         Map<String, String> config;
-
     }
 
 
@@ -40,15 +38,14 @@ public class PolinDistributeFsCluster {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class NetFsDisk {
-        String name;
-        Map<String, NamedBasicNetFs> basicNetFs;
-
+        String group;
+        List<NamedBasicNetFs> fsList;
     }
 
 
     @Data
     public static class Cluster {
-        Map<String, NetFsDisk> disks = new HashMap<>();
+        List<NetFsDisk> disks = new ArrayList<>();
         Long version = 0L;
     }
 
@@ -57,6 +54,9 @@ public class PolinDistributeFsCluster {
 
 
     public PolinDistributeFsCluster(Map<String, String> config) {
+        if (!config.containsKey("group") && !config.containsKey("name")) {
+            throw new RuntimeException("Your Should Launch PDFS Server with param [group] and [name] ");
+        }
         addConfig(config);
     }
 
@@ -73,8 +73,8 @@ public class PolinDistributeFsCluster {
     }
 
     private void doSync() {
-        List<NamedBasicNetFs> namedBasicNetFs = cluster.disks.values().stream()
-                .flatMap(o -> o.basicNetFs.values().stream())
+        List<NamedBasicNetFs> namedBasicNetFs = cluster.disks.stream()
+                .flatMap(o -> o.fsList.stream())
                 .toList();
 
         if (namedBasicNetFs.isEmpty()) {
@@ -87,11 +87,11 @@ public class PolinDistributeFsCluster {
             try {
                 PdfsFileInputStream read = fs.extendableNetFs.read(PolinDistributeConfigs.clusterFileName);
                 byte[] bytes = read.readAllBytes();
-                Cluster remoteCluster = new ObjectMapper().readValue(bytes, new TypeReference<Cluster>() {
+                Cluster remoteCluster = new ObjectMapper().readValue(bytes, new TypeReference<>() {
                 });
                 if (remoteCluster.version > this.cluster.version) {
                     this.cluster = remoteCluster;
-                    remoteCluster.disks.forEach((s, netFsDisk) -> netFsDisk.basicNetFs.forEach((s1, namedBasicNetFs1) -> {
+                    remoteCluster.disks.forEach((netFsDisk) -> netFsDisk.fsList.forEach((namedBasicNetFs1) -> {
                         Map<String, String> config = namedBasicNetFs1.getConfig();
                         namedBasicNetFs1.extendableNetFs = Factory.getExtendNetFs(config);
                     }));
@@ -115,28 +115,39 @@ public class PolinDistributeFsCluster {
                 throw new RuntimeException(e);
             }
         }
-
-
     }
 
 
     public List<NetFsDisk> getDisks() {
         init();
-        return cluster.disks.values().stream().toList();
+        return cluster.disks;
     }
 
 
-    public synchronized void addConfig(Map<String, String> config) {
-        if (config.containsKey("group")) {
+    public synchronized boolean addConfig(Map<String, String> config) {
+        if (config.containsKey("group") && config.containsKey("name")) {
             String group = config.get("group");
-            cluster.disks.computeIfAbsent(group, s -> new NetFsDisk(group, new HashMap<>()));
-            NetFsDisk netFsDisk = cluster.disks.get(group);
             String name = config.get("name");
-            NamedBasicNetFs namedBasicNetFs = new NamedBasicNetFs(name, Factory.getExtendNetFs(config), config);
-            netFsDisk.basicNetFs.put(name, namedBasicNetFs);
-            hasSync = false;
-            cluster.version++;
+
+            NetFsDisk netFsDisk = cluster.disks.stream().filter(o -> o.group.equals(group)).findAny().orElse(null);
+            if (netFsDisk == null) {
+                netFsDisk = new NetFsDisk(group, new ArrayList<>());
+                cluster.disks.add(netFsDisk);
+            }
+
+            NamedBasicNetFs namedBasicNetFs = netFsDisk.fsList.stream().filter(o -> o.name.equals(name)).findAny().orElse(null);
+            if (namedBasicNetFs == null) {
+                namedBasicNetFs = new NamedBasicNetFs(name, Factory.getExtendNetFs(config), config);
+                netFsDisk.fsList.add(namedBasicNetFs);
+
+                hasSync = false;
+                cluster.version++;
+
+                init();
+                return true;
+            }
+
         }
-        init();
+        return false;
     }
 }

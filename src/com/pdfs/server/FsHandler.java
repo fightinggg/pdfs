@@ -2,6 +2,7 @@ package com.pdfs.server;
 
 import com.pdfs.fsfactory.Factory;
 import com.pdfs.normalfs.NormalFs;
+import com.pdfs.server.fshander.FsClusterHandler;
 import com.pdfs.server.fshander.FsReadHandler;
 import com.pdfs.server.fshander.FsWebLsHandler;
 import com.pdfs.server.fshander.FsWriteBigHandler;
@@ -17,6 +18,7 @@ public class FsHandler {
     FsWriteBigHandler fsWriteBigHandler;
     FsReadHandler fsReadHandler;
     FsWebLsHandler fsWebLsHandler;
+    FsClusterHandler fsClusterHandler;
 
     public FsHandler(Map<String, String> config) {
         fs = Factory.getNormalFs(config);
@@ -24,6 +26,7 @@ public class FsHandler {
         fsWriteBigHandler = new FsWriteBigHandler(fs);
         fsReadHandler = new FsReadHandler(fs);
         fsWebLsHandler = new FsWebLsHandler(fs);
+        fsClusterHandler = new FsClusterHandler(fs);
     }
 
     HttpRsp httpHandler(String url, String method, InputStream inputStream) throws IOException {
@@ -41,6 +44,15 @@ public class FsHandler {
         }
         if (method.equals("POST") && url.startsWith("/fsapi/writeBig/")) {
             return fsWriteBigHandler.writeBigHandler(url, method, inputStream);
+        }
+        if (method.equals("GET") && url.startsWith("/fsapi/cluster")) {
+            return fsClusterHandler.get(url, method, inputStream);
+        }
+        if (method.equals("POST") && url.startsWith("/fsapi/cluster")) {
+            return fsClusterHandler.post(url, method, inputStream);
+        }
+        if (method.equals("GET") && url.startsWith("/fsapi/webcluster")) {
+            return fsClusterHandler.web(url, method, inputStream);
         }
         return new HttpRsp(403, "SORRY! Your Request Is Not Valid!");
     }

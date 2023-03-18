@@ -1,15 +1,20 @@
 package com.pdfs.normalfs;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 import java.util.Objects;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class File {
     public String name;
     public Boolean isDir;
+    List<String> groups;
 
-    public File(String name, Boolean isDir) {
-        this.name = name;
-        this.isDir = isDir;
-    }
 
     @Override
     public boolean equals(Object o) {

@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class FsWriteBigHandler {
@@ -21,11 +23,14 @@ public class FsWriteBigHandler {
 
     public HttpRsp writeBigHandler(String url, String method, InputStream inputStream) throws IOException {
         String path = url.substring("/fsapi/writeBig/".length());
+        path = URLDecoder.decode(path, StandardCharsets.UTF_8);
+
+
         String[] split = path.split("/");
         long total, current;
         try {
             total = Long.parseLong(split[0]);
-            current = Long.parseLong(split[1]);
+            current = Long.parseLong(split[1]) << 20;
         } catch (Exception e) {
             return new HttpRsp(400, "BAD REQUEST");
         }

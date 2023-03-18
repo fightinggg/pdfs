@@ -13,6 +13,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -25,13 +26,17 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, FullHttpRequest req) {
+        if (Objects.equals(req.method().toString(), "GET") && Objects.equals(req.uri(), "/favicon.ico")) {
+            ctx.writeAndFlush(Unpooled.buffer()).addListener(ChannelFutureListener.CLOSE);
+            return;
+        }
 
 
         ByteBufInputStream reqBody = new ByteBufInputStream(req.content());
         HttpRsp rsp = null;
         try {
             log.info("receive: {} {}", req.method(), req.uri());
-            rsp = httpHandler.httpHandler(req.uri(), req.method().toString(), reqBody);
+            rsp = httpHandler.httpHandler(req.uri(), req.method().toString(), req.headers(), reqBody);
         } catch (IOException e) {
             log.error("", e);
             rsp = new HttpRsp(500, "Server Error");
@@ -51,7 +56,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         int block = 1 << 10; // 1KB
 
         try {
-            int totalSize = 0;
+            long totalSize = 0;
             while (true) {
                 ByteBuf buffer = Unpooled.buffer(block);
                 int size = buffer.writeBytes(body, block);
@@ -61,7 +66,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 totalSize += size;
                 ctx.writeAndFlush(buffer);
             }
-            log.info("request reach END, send bytes={}", totalSize);
+            log.info("send bytes={}", totalSize);
         } catch (Exception e) {
             log.error("", e);
         } finally {

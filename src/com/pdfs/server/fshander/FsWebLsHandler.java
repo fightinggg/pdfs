@@ -51,6 +51,10 @@ public class FsWebLsHandler {
                         <button id='create' onclick="createFile()"> create or update file </button>
                         <br/> <br/>
                         <input type="file" id="file-uploader">
+                        
+                        <br/>
+                        <a href="/">Click Here To Main Page</a>
+                        
                         <hr/>
                         
                         <script>
@@ -73,7 +77,7 @@ public class FsWebLsHandler {
                             function createFile(){
                                 var data=document.getElementById("about").value;
                                 var filename = location.pathname.substr(12) + document.getElementById("filename").value;
-                                document.getElementById("create").outerHTML='<span>please wait......</span>'
+                                document.getElementById("create").outerHTML='<span id="create">please wait......</span>'
                                 httpPost(`/fsapi/writeBig/${data.length}/0`+filename,data,function(x){
                                     if(x.status!=200){
                                         alert(x.response)
@@ -102,14 +106,34 @@ public class FsWebLsHandler {
                               }
                               console.log(fileChunkList)
                                 
+                              second = Date.parse(new Date())
+                              totalSend = 0
+                              speed = '计算中'
                               uploadFunc = function(index){
-                                  rate = index/(file.size>>20)
-                                  document.getElementById("file-uploader").outerHTML=`<p id='file-uploader'>上传中${Math.floor(rate * 10000) / 100}%</p>`
+                                  currendSecond = Date.parse(new Date())
+                                  totalSend = totalSend+1
+                                  if(currendSecond > second+1000){
+                                      speed = size*totalSend * 1000.0/ (currendSecond - second) 
+                                      
+                                      if(speed<=1024){
+                                         speed = `${speed}B/S`
+                                      }else if(speed<=1024*1024){
+                                         speed = `${speed/1024}KB/S`
+                                      }else {
+                                         speed = `${speed/1024/1024}MB/S`
+                                      }
+                                      second = currendSecond
+                                      totalSend = 0
+                                  }
+                                  
+                                  rate = index/(file.size)*size
+                                  document.getElementById("file-uploader").outerHTML=`<p id='file-uploader'>上传中：${Math.floor(rate * 10000) / 100}% 速度： ${speed}</p>`
                                   reader = new FileReader()
                                   reader.onload = function(){
-                                      httpPost(`/fsapi/writeBig/${file.size}/${index<<20}/${file.name}`,reader.result,function(x){
+                                      httpPost(`/fsapi/writeBig/${file.size}/${index}/${file.name}`,reader.result,function(x){
                                           if(x.status!=200){
                                               alert(x.response)
+                                              location.reload();
                                           }else if(index+1<fileChunkList.length){
                                                uploadFunc(index+1)
                                           }else{
@@ -135,7 +159,8 @@ public class FsWebLsHandler {
                             if (o.isDir) {
                                 return String.format("<a href='/fsapi/webls%s'>%s</a><br><br>", o.name, o.name);
                             } else {
-                                return String.format("<a href='/fsapi/read%s'>%s</a><br><br>", o.name, o.name);
+                                return String.format("<a href='/fsapi/read%s'>%s </a>[repete on %s]<br><br>"
+                                        , o.name, o.name, String.join(",", o.getGroups()));
                             }
                         })
                         .collect(Collectors.joining());

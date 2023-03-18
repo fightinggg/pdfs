@@ -4,11 +4,10 @@ import com.pdfs.basicnetfs.*;
 import com.pdfs.extendnetfs.ExtendNetFsAdepr;
 import com.pdfs.extendnetfs.ExtendableNetFs;
 import com.pdfs.extendnetfs.encryptionfs.AesEncryptionFsImpl;
-import com.pdfs.extendnetfs.encryptionfs.EncryptionFs;
 import com.pdfs.extendnetfs.encryptionfs.NoEncryptionFsImpl;
-import com.pdfs.normalfs.FileNormalFsImpl;
 import com.pdfs.normalfs.NormalFs;
 import com.pdfs.extendnetfs.signfs.Md5SignFsImpl;
+import com.pdfs.reliable.PolinDistributeFs;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -20,11 +19,7 @@ import java.util.Objects;
 public class Factory {
 
     public static NormalFs getNormalFs(Map<String, String> config) {
-
-        ExtendableNetFs extendableNetFs = getExtendNetFs(config);
-
-
-        return getFileNormalFs(config, extendableNetFs);
+        return new PolinDistributeFs(config);
 
     }
 
@@ -61,10 +56,6 @@ public class Factory {
 
 
         return extendableNetFs;
-    }
-
-    private static FileNormalFsImpl getFileNormalFs(Map<String, String> config, ExtendableNetFs extendableNetFs) {
-        return new FileNormalFsImpl(extendableNetFs);
     }
 
     @NotNull
