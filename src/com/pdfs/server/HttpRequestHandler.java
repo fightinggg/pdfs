@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -57,30 +59,23 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         InputStream body = rsp.body;
         int block = 1 << 10; // 1KB
 
-        final boolean[] connect = {true};
-
 
         try {
             long totalSize = 0;
-            while (connect[0]) {
+            while (true) {
                 ByteBuf buffer = Unpooled.buffer(block);
                 int size = buffer.writeBytes(body, block);
                 if (size <= 0) {
                     break;
                 }
                 totalSize += size;
-                ctx.writeAndFlush(buffer).addListener((ChannelFutureListener) future -> {
-                    if (future.state().equals(Future.State.FAILED)) {
-                        log.error("failed: {}", future);
-                        connect[0] = false;
-                    }
-                });
+                ctx.writeAndFlush(buffer).sync();
             }
-            log.info("send connect={}, bytes={}", connect[0], totalSize);
+            log.info("send connect={}, bytes={}", true, totalSize);
         } catch (Exception e) {
             log.error("", e);
         } finally {
-            ctx.writeAndFlush(Unpooled.buffer()).addListener(ChannelFutureListener.CLOSE);
+            ctx.close();
         }
     }
 
