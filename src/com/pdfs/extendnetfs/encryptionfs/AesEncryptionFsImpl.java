@@ -23,7 +23,7 @@ public class AesEncryptionFsImpl implements EncryptionFs {
         byte[] fileNameAes = AES.encode(fileName.getBytes(StandardCharsets.UTF_8), key);
         fileName = new String(Base64.encode(fileNameAes)).replaceAll("/", "-") + ".bin";
 
-        return AES.decode(extendableNetFs.read(fileName), key);
+        return AES.decodePerSize(extendableNetFs.read(fileName), key);
 
     }
 
@@ -31,7 +31,7 @@ public class AesEncryptionFsImpl implements EncryptionFs {
         byte[] fileNameAes = AES.encode(fileName.getBytes(StandardCharsets.UTF_8), key);
         fileName = new String(Base64.encode(fileNameAes)).replaceAll("/", "-") + ".bin";
 
-        data = AES.encode(data, key);
+        data = AES.encodePerSize(data, key);
         extendableNetFs.write(fileName, data);
     }
 

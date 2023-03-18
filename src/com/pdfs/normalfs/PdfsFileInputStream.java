@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class PdfsFileInputStream extends InputStream {
-    private final long size;
+    private long size;
     private final InputStream inputStream;
 
     public static PdfsFileInputStream fromBytes(byte[] s) {
@@ -17,12 +17,20 @@ public class PdfsFileInputStream extends InputStream {
         this.inputStream = inputStream;
     }
 
-    public long getFileSize() {
+    public long getRemainSize() {
         return size;
     }
 
     @Override
     public int read() throws IOException {
-        return inputStream.read();
+        int read = inputStream.read();
+        if (read == -1) {
+            if (size != 0) {
+                throw new RuntimeException();
+            }
+        } else {
+            size = size - 1;
+        }
+        return read;
     }
 }

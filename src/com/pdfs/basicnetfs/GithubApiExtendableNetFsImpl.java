@@ -5,11 +5,7 @@ import com.pdfs.normalfs.PdfsFileInputStream;
 import com.pdfs.utils.Base64;
 import com.pdfs.utils.Hex;
 import com.pdfs.utils.SHA;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,17 +49,15 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         log.info("request to github GET {}", url);
         long start = System.currentTimeMillis();
         Response response = client.newCall(request).execute();
+        log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
         if (response.isSuccessful()) {
-            byte[] bytes = response.body().bytes();
-            log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
             response.code();
-            return Base64.decode(PdfsFileInputStream.fromBytes(bytes));
+            ResponseBody body = response.body();
+            return Base64.decode(new PdfsFileInputStream(body.contentLength(), body.byteStream()));
         } else if (response.code() == 404) {
-            log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
             response.code();
             throw new FileNotFoundException();
         } else {
-            log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
             response.code();
             throw new RuntimeException(response.message());
         }

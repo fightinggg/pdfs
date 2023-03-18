@@ -4,10 +4,7 @@ import com.pdfs.normalfs.PdfsFileInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Map;
 
 @Slf4j
@@ -29,7 +26,19 @@ public class LocalFileSystemExtendableNetFsImpl extends ValidExtendableNetFsAbst
         FileInputStream fileInputStream = new FileInputStream(fileName);
         byte[] bytes = fileInputStream.readAllBytes();
         fileInputStream.close();
-        return PdfsFileInputStream.fromBytes(bytes);
+        return new PdfsFileInputStream(bytes.length, new InputStream() {
+            final InputStream inputStream = new ByteArrayInputStream(bytes);
+
+            @Override
+            public int read() throws IOException {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return inputStream.read();
+            }
+        });
 
     }
 

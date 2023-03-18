@@ -3,7 +3,6 @@ package com.pdfs.fsfactory;
 import com.pdfs.basicnetfs.*;
 import com.pdfs.extendnetfs.ExtendNetFsAdepr;
 import com.pdfs.extendnetfs.ExtendableNetFs;
-import com.pdfs.extendnetfs.cachefs.CacheFs;
 import com.pdfs.extendnetfs.encryptionfs.AesEncryptionFsImpl;
 import com.pdfs.extendnetfs.encryptionfs.NoEncryptionFsImpl;
 import com.pdfs.normalfs.NormalFs;
@@ -52,7 +51,8 @@ public class Factory {
         //extendableNetFs = new CacheFs(extendableNetFs);
 
 
-        extendableNetFs = new Md5SignFsImpl(extendableNetFs);
+        // TODO ADD MD5
+//        extendableNetFs = new Md5SignFsImpl(extendableNetFs);
 
         String key = processKey(config);
 

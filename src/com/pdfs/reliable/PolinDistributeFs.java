@@ -38,16 +38,14 @@ public class PolinDistributeFs implements NormalFs {
         return block + "/" + prefix + name;
     }
 
-    private List<Object> getSizeFromFileSizeEncode(byte[] data) {
+    private List<Object> getSizeFromFileSizeEncode(PdfsFileInputStream data) throws IOException {
         long size = 0;
         for (int i = 0; i < 8; i++) {
-            size = size * 256 + (255 & data[i]);
+//            size = size * 256 + (255 & data[i]);
+            size = size * 256 + (255 & data.read());
         }
 
-        byte[] dataRes = new byte[data.length - 8];
-        System.arraycopy(data, 8, dataRes, 0, dataRes.length);
-
-        return List.of(size, dataRes);
+        return List.of(size, data);
 
     }
 
@@ -116,14 +114,13 @@ public class PolinDistributeFs implements NormalFs {
 
 
         try {
-            byte[] read = read(group, encodeName(0, filePrefix, path)).readAllBytes();
+            PdfsFileInputStream read = read(group, encodeName(0, filePrefix, path));
             List<Object> decodeSizeWithData = getSizeFromFileSizeEncode(read);
             long fileTotalSize = (long) decodeSizeWithData.get(0);
             long validSize = Math.min(size, fileTotalSize - from);
 
             if (validSize <= maxFileSize) {
-                byte[] res = (byte[]) decodeSizeWithData.get(1);
-                return new PdfsFileInputStream(res.length, new ByteArrayInputStream(res));
+                return (PdfsFileInputStream) decodeSizeWithData.get(1);
             } else { // 处理大文件 filezize > 1MB
                 int beginPage = (int) (from / maxFileSize);
                 int endPage = (int) ((from + validSize - 1) / maxFileSize);
@@ -131,27 +128,30 @@ public class PolinDistributeFs implements NormalFs {
                 for (int i = beginPage; i <= endPage; i++) {
                     int finalI = i;
                     res.add(() -> {
-                        byte[] readData;
+                        PdfsFileInputStream readData;
                         if (finalI == 0) {
-                            readData = (byte[]) decodeSizeWithData.get(1);
+                            readData = (PdfsFileInputStream) decodeSizeWithData.get(1);
                         } else {
                             try {
-                                readData = read(group, encodeName(finalI, filePrefix, path)).readAllBytes();
+                                readData = read(group, encodeName(finalI, filePrefix, path));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
                         }
                         long totalEnd = from + validSize - 1;
                         long start = from <= finalI * maxFileSize ? 0 : (int) (from % maxFileSize);
-                        long end = totalEnd >= (finalI * maxFileSize + maxFileSize - 1) ? readData.length - 1 : (totalEnd % maxFileSize);
-                        if (start == 0 && end == readData.length - 1) {
-                            return new ByteArrayInputStream(readData);
+                        long end = totalEnd >= (finalI * maxFileSize + maxFileSize - 1) ? readData.getRemainSize() - 1 : (totalEnd % maxFileSize);
+                        if (start == 0 && end == readData.getRemainSize() - 1) {
+                            return readData;
                         } else {
-                            byte[] subData = new byte[(int) (end - start + 1)];
-                            System.arraycopy(readData, (int) start, subData, 0, subData.length);
-                            return new ByteArrayInputStream(subData);
+                            try {
+                                readData.skipNBytes(start);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            // TODO 子串 // (end - start + 1)
+                            return readData;
                         }
-
                     });
 
                 }
