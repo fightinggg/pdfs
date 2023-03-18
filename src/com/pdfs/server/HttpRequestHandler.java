@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@ChannelHandler.Sharable
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     Logger log = LoggerFactory.getLogger(HttpRequestHandler.class);
     HttpHandler httpHandler;

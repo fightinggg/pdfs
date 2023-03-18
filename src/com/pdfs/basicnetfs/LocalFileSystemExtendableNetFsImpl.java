@@ -1,6 +1,7 @@
 package com.pdfs.basicnetfs;
 
 import com.pdfs.normalfs.PdfsFileInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -9,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
+@Slf4j
 public class LocalFileSystemExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     String fileDir;
@@ -21,6 +23,7 @@ public class LocalFileSystemExtendableNetFsImpl extends ValidExtendableNetFsAbst
     }
 
     public PdfsFileInputStream readValid(String fileName) throws IOException {
+        log.info("read: " + fileName);
         fileName = fileDir + "/" + fileName;
 
         FileInputStream fileInputStream = new FileInputStream(fileName);
@@ -31,6 +34,7 @@ public class LocalFileSystemExtendableNetFsImpl extends ValidExtendableNetFsAbst
     }
 
     public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
+        log.info("write: " + fileName);
         fileName = fileDir + "/" + fileName;
 
         FileUtils.forceMkdir(new File(fileName).getParentFile());

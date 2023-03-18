@@ -37,6 +37,9 @@ public class HttpServer {
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup boss = new NioEventLoopGroup();
         EventLoopGroup work = new NioEventLoopGroup();
+        HttpRequestHandler httpRequestHandler = new HttpRequestHandler(config);
+
+
         bootstrap.group(boss, work)
                 .handler(new LoggingHandler(LogLevel.DEBUG))
                 .channel(NioServerSocketChannel.class)
@@ -49,7 +52,7 @@ public class HttpServer {
 //                        pipeline.addLast(new SslHandler(sslEngine));
                         pipeline.addLast(new HttpRequestDecoder());// http 编解码
                         pipeline.addLast("httpAggregator", new HttpObjectAggregator(2 * 1024 * 1024)); // 2MB                                                                    512*1024为接收的最大contentlength
-                        pipeline.addLast(new HttpRequestHandler(config));// 请求处理器
+                        pipeline.addLast(httpRequestHandler);// 请求处理器
                     }
                 });
 
