@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -65,10 +66,15 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     @Override
     public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
-        PdfsFileInputStream old = null;
+        byte[] dataBytes = data.readAllBytes();
+        byte[] oldBytes = null;
         try {
-            old = readValid(fileName);
-            old = Base64.encode(old);
+            oldBytes = readValid(fileName).readAllBytes();
+            if (Arrays.equals(oldBytes, dataBytes)) {
+                // skip
+                return;
+            }
+            oldBytes = Base64.encode(oldBytes);
         } catch (FileNotFoundException e) {
         }
 
@@ -81,14 +87,14 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         MediaType mediaType = MediaType.parse("application/json");
         Map<String, String> params = new HashMap<>();
         params.put("message", "pdfs-github-api-upload");
-        data = Base64.encode(data);
+        dataBytes = Base64.encode(dataBytes);
         // TODO
-        params.put("content", new String(Base64.encode(data).readAllBytes()));
-        if (old != null) {
-            byte[] head = String.format("blob %d\0", old.getFileSize()).getBytes();
-            byte[] sum = new byte[(int) (old.getFileSize() + head.length)];
+        params.put("content", new String(Base64.encode(dataBytes)));
+        if (oldBytes != null) {
+            byte[] head = String.format("blob %d\0", oldBytes.length).getBytes();
+            byte[] sum = new byte[(int) (oldBytes.length + head.length)];
             System.arraycopy(head, 0, sum, 0, head.length);
-            System.arraycopy(old.readAllBytes(), 0, sum, head.length, (int) old.getFileSize());
+            System.arraycopy(oldBytes, 0, sum, head.length, (int) oldBytes.length);
             params.put("sha", Hex.encode(SHA.encode(sum)));
         }
 
