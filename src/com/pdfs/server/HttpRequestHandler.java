@@ -81,7 +81,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 });
             }
             log.info("send bytes={}", totalSize);
-            ctx.close();
+            ctx.writeAndFlush(Unpooled.buffer()).addListener(ChannelFutureListener.CLOSE);
         } catch (Exception e) {
             ctx.close();
             log.error("", e);
