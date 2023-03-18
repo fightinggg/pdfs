@@ -56,9 +56,18 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         InputStream body = rsp.body;
         int block = 1 << 10; // 1KB
 
+        final boolean[] connect = {true};
+
+        ctx.disconnect().addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                connect[0] = false;
+            }
+        });
+
         try {
             long totalSize = 0;
-            while (true) {
+            while (connect[0]) {
                 ByteBuf buffer = Unpooled.buffer(block);
                 int size = buffer.writeBytes(body, block);
                 if (size <= 0) {
@@ -67,7 +76,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 totalSize += size;
                 ctx.writeAndFlush(buffer);
             }
-            log.info("send bytes={}", totalSize);
+            log.info("send connect={}, bytes={}", connect[0], totalSize);
         } catch (Exception e) {
             log.error("", e);
         } finally {
