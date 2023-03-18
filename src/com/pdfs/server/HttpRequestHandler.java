@@ -75,7 +75,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                         connect[0] = false;
                         Throwable throwable = future.exceptionNow();
                         if (throwable != null) {
-                            log.error("", throwable);
+                            throwable.printStackTrace();
+                            log.error("send data failed... ", throwable);
                         }
                     }
                 });
