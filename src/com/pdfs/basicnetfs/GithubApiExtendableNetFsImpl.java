@@ -54,12 +54,14 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         Response response = client.newCall(request).execute();
         log.info("github return {}", response.code());
         if (response.isSuccessful()) {
-            InputStream inputStream = response.body().byteStream();
-            long length = response.body().contentLength();
-            return Base64.decode(new PdfsFileInputStream(length, inputStream));
+            byte[] bytes = response.body().bytes();
+            response.code();
+            return Base64.decode(PdfsFileInputStream.fromBytes(bytes));
         } else if (response.code() == 404) {
+            response.code();
             throw new FileNotFoundException();
         } else {
+            response.code();
             throw new RuntimeException(response.message());
         }
     }
