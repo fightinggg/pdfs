@@ -197,8 +197,10 @@ public class PolinDistributeFs implements NormalFs {
             write(firstGroup, encodeName((int) (from / maxFileSize), filePrefix, path), PdfsFileInputStream.fromBytes(data));
         }
 
-        // 2. write dir
-        dirAddItem(path, false, cluster.getDisks().stream().map(NetFsDisk::getGroup).toList());
+        // 2. last write dir
+        if (from + (1 << 20) >= total) {
+            dirAddItem(path, false, cluster.getDisks().stream().map(NetFsDisk::getGroup).toList());
+        }
     }
 
     private void dirAddItem(String path, Boolean isDir, List<String> allGroup) throws IOException {
