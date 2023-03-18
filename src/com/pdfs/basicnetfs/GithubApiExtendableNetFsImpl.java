@@ -51,8 +51,9 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
                 .addHeader("X-GitHub-Api-Version", "2022-11-28")
                 .build();
         log.info("request to github GET {}", url);
+        long start = System.currentTimeMillis();
         Response response = client.newCall(request).execute();
-        log.info("github return {}", response.code());
+        log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
         if (response.isSuccessful()) {
             byte[] bytes = response.body().bytes();
             response.code();
@@ -101,15 +102,19 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         }
 
         RequestBody body = RequestBody.create(mediaType, new ObjectMapper().writeValueAsBytes(params));
+        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
         Request request = new Request.Builder()
-                .url(String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName))
+                .url(url)
                 .method("PUT", body)
                 .addHeader("Authorization", "Bearer " + githubToken)
                 .addHeader("Accept", "application/vnd.github+json")
                 .addHeader("X-GitHub-Api-Version", "2022-11-28")
                 .addHeader("Content-Type", "application/json")
                 .build();
+        log.info("request to github PUT {}", url);
+        long start = System.currentTimeMillis();
         Response response = client.newCall(request).execute();
+        log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
         response.close();
         if (!response.isSuccessful()) {
             throw new RuntimeException(response.message());
