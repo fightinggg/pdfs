@@ -73,9 +73,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 ctx.writeAndFlush(buffer).addListener((ChannelFutureListener) future -> {
                     if (!future.isSuccess()) {
                         connect[0] = false;
-                        Throwable throwable = future.exceptionNow();
+                        Throwable throwable = future.cause();
                         if (throwable != null) {
-                            throwable.printStackTrace();
                             log.error("send data failed... ", throwable);
                         }
                     }
