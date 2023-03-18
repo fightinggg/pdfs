@@ -49,13 +49,15 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     @NotNull
     private PdfsFileInputStream _readValid(String fileName) throws IOException {
+        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
+        log.info("request to github GET {}", url);
+
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .callTimeout(10, TimeUnit.MINUTES)
                 .connectTimeout(10, TimeUnit.MINUTES)
                 .readTimeout(10, TimeUnit.MINUTES)
                 .writeTimeout(10, TimeUnit.MINUTES)
                 .build();
-        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
         Request request = new Request.Builder()
                 .url(url)
                 .method("GET", null)
@@ -63,7 +65,6 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
                 .addHeader("Accept", "application/vnd.github.v3.raw")
                 .addHeader("X-GitHub-Api-Version", "2022-11-28")
                 .build();
-        log.info("request to github GET {}", url);
         long start = System.currentTimeMillis();
         Response response = client.newCall(request).execute();
         log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
@@ -82,6 +83,8 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     @Override
     public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
+
+
         byte[] dataBytes = data.readAllBytes();
         byte[] oldBytes = null;
         try {
@@ -93,6 +96,9 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
             oldBytes = Base64.encode(oldBytes);
         } catch (FileNotFoundException e) {
         }
+
+        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
+        log.info("request to github PUT {}", url);
 
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .callTimeout(10, TimeUnit.MINUTES)
@@ -115,7 +121,7 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         }
 
         RequestBody body = RequestBody.create(mediaType, new ObjectMapper().writeValueAsBytes(params));
-        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
+
         Request request = new Request.Builder()
                 .url(url)
                 .method("PUT", body)
@@ -124,7 +130,6 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
                 .addHeader("X-GitHub-Api-Version", "2022-11-28")
                 .addHeader("Content-Type", "application/json")
                 .build();
-        log.info("request to github PUT {}", url);
         long start = System.currentTimeMillis();
         Response response = client.newCall(request).execute();
         log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
