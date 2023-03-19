@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -152,12 +153,25 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         if (response.isSuccessful()) {
             response.code();
             ResponseBody body = response.body();
-            return new PdfsFileInputStream(body.contentLength(), body.byteStream());
+            return new PdfsFileInputStream(body.contentLength(), new InputStream() {
+                boolean open = true;
+                final InputStream inputStream = body.byteStream();
+
+                @Override
+                public int read() throws IOException {
+                    int res = inputStream.read();
+                    if (res == -1 && open) {
+                        response.close();
+                        open = false;
+                    }
+                    return res;
+                }
+            });
         } else if (response.code() == 404) {
-            response.code();
+            response.close();
             throw new FileNotFoundException();
         } else {
-            response.code();
+            response.close();
             throw new RuntimeException(response.message());
         }
     }
