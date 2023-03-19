@@ -64,13 +64,12 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         try {
             long totalSize = 0;
             while (connect[0]) {
-                ByteBuf buffer = Unpooled.buffer(block);
-                int size = buffer.writeBytes(body, block);
-                if (size <= 0) {
+                bytes = body.readNBytes(block);
+                if (bytes.length == 0) {
                     break;
                 }
-                totalSize += size;
-                ctx.writeAndFlush(buffer).addListener((ChannelFutureListener) future -> {
+                totalSize += bytes.length;
+                ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes)).addListener((ChannelFutureListener) future -> {
                     if (!future.isSuccess()) {
                         connect[0] = false;
                         Throwable throwable = future.cause();

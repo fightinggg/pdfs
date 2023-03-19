@@ -43,6 +43,7 @@ public class CacheFs implements ExtendableNetFs {
         private void maybeShutdown() {
             int i = Math.abs(random.nextInt()) % 100;
             if (i == 0) {
+                log.info("shut down cache...");
                 for (CacheNode value : cacheMap.values()) {
                     value.vv = (value.vv + 1) / 2;
                 }

@@ -50,6 +50,8 @@ public class HttpServer {
 //                        SSLEngine sslEngine = SecureSocketSslContextFactory.getServerContext().createSSLEngine();
 //                        sslEngine.setUseClientMode(false);
 //                        pipeline.addLast(new SslHandler(sslEngine));
+//                        InetSocketAddress inetSocketAddress = channel.remoteAddress();
+//                        log.info("connect with: {}:{}:{}", inetSocketAddress.getHostString(), inetSocketAddress.getHostName(), inetSocketAddress.getPort());
                         pipeline.addLast(new HttpRequestDecoder());// http 编解码
                         pipeline.addLast("httpAggregator", new HttpObjectAggregator(2 * 1024 * 1024)); // 2MB                                                                    512*1024为接收的最大contentlength
                         pipeline.addLast(httpRequestHandler);// 请求处理器
