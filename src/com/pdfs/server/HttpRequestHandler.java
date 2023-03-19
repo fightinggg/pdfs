@@ -66,19 +66,20 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             int block = 1 << 10; // 1KB
 
             byte[] bytes = inputStream.readNBytes(block);
-            if (bytes.length == 0) {
+            int length = bytes.length;
+            if (length == 0) {
                 log.info("send bytes total={}", totalSize);
                 ctx.close();
                 return;
             }
 
 
-            if ((totalSize + bytes.length) / 1024 / 1024 > totalSize / 1024 / 1024) {
+            if ((totalSize + length) / 1024 / 1024 > totalSize / 1024 / 1024) {
                 log.info("send bytes now={} MB", totalSize / (1024 * 1024.0));
             }
 
 
-            ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes)).addListener((ChannelFutureListener) future -> {
+            ctx.writeAndFlush(Unpooled.buffer(length).writeBytes(bytes)).addListener((ChannelFutureListener) future -> {
                 if (!future.isSuccess()) {
                     Throwable throwable = future.cause();
                     if (throwable != null) {
@@ -86,7 +87,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     }
                     future.channel().close();
                 } else {
-                    readAndWrite(ctx, inputStream, totalSize + bytes.length);
+                    readAndWrite(ctx, inputStream, totalSize + length);
                 }
             });
 
