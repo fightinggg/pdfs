@@ -57,6 +57,11 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes));
 
         InputStream body = rsp.body;
+        readAndWrite(ctx, body);
+    }
+
+
+    void readAndWrite(ChannelHandlerContext ctx, InputStream inputStream) {
         int block = 1 << 10; // 1KB
 
         final boolean[] connect = {true};
@@ -64,7 +69,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         try {
             long totalSize = 0;
             while (connect[0]) {
-                bytes = body.readNBytes(block);
+                byte[] bytes = inputStream.readNBytes(block);
                 if (bytes.length == 0) {
                     break;
                 }
