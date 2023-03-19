@@ -9,10 +9,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class CacheFs implements ExtendableNetFs {
@@ -22,7 +20,7 @@ public class CacheFs implements ExtendableNetFs {
         @Data
         @AllArgsConstructor
         static class CacheNode {
-            Integer vv;
+            int vv;
             byte[] data;
         }
 
@@ -49,24 +47,30 @@ public class CacheFs implements ExtendableNetFs {
                 cacheMap.put(key, new CacheNode(1, data));
             }
 
-            List<String> cacheData = cacheMap.entrySet().stream()
+            List<Map.Entry<String, CacheNode>> cacheData = cacheMap.entrySet().stream()
                     .filter(o -> o.getValue().data != null)
                     .sorted(Comparator.comparing(o -> o.getValue().vv))
-                    .map(Map.Entry::getKey).toList();
+                    .toList();
             if (cacheData.size() > cacheDataSize) {
-                String remove = cacheData.get(0);
+                int removeVv = cacheData.get(0).getValue().vv;
+                cacheData = cacheData.stream().filter(o -> o.getValue().vv == removeVv).collect(Collectors.toList());
+                Collections.shuffle(cacheData);
+                String remove = cacheData.get(0).getKey();
                 cacheMap.remove(remove);
                 log.info("remove cache: {}", remove);
             }
 
-            List<String> notCacheData = cacheMap.entrySet().stream()
+            cacheData = cacheMap.entrySet().stream()
                     .filter(o -> o.getValue().data == null)
                     .sorted(Comparator.comparing(o -> o.getValue().vv))
-                    .map(Map.Entry::getKey).toList();
-            if (notCacheData.size() > noCacheDataSize) {
-                String remove = cacheData.get(0);
+                    .toList();
+            if (cacheData.size() > noCacheDataSize) {
+                int removeVv = cacheData.get(0).getValue().vv;
+                cacheData = cacheData.stream().filter(o -> o.getValue().vv == removeVv).collect(Collectors.toList());
+                Collections.shuffle(cacheData);
+                String remove = cacheData.get(0).getKey();
                 cacheMap.remove(remove);
-//                log.info("remove cache: {}", remove);
+                log.info("remove cache: {}", remove);
             }
         }
     }
