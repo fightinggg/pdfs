@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,18 +45,28 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     @NotNull
     private PdfsFileInputStream _retryRead(String fileName) throws IOException {
-        try {
-            return _readBase64(fileName);
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
+        for (int i = 0; i < 10; i++) {
             try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                log.warn("", ex);
+                return _readBase64(fileName);
+            } catch (FileNotFoundException e) {
+                throw e;
+            } catch (UnknownHostException e) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex) {
+                    log.warn("", ex);
+                }
+                log.warn("UnknownHostException" + e.getMessage());
+            } catch (Exception e) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex) {
+                    log.warn("", ex);
+                }
+                return _readBase64(fileName);
             }
-            return _readBase64(fileName);
         }
+        throw new RuntimeException();
     }
 
 

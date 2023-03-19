@@ -3,6 +3,7 @@ package com.pdfs.fsfactory;
 import com.pdfs.basicnetfs.*;
 import com.pdfs.extendnetfs.ExtendNetFsAdepr;
 import com.pdfs.extendnetfs.ExtendableNetFs;
+import com.pdfs.extendnetfs.cachefs.CacheFs;
 import com.pdfs.extendnetfs.encryptionfs.AesEncryptionFsImpl;
 import com.pdfs.extendnetfs.encryptionfs.NoEncryptionFsImpl;
 import com.pdfs.normalfs.NormalFs;
@@ -48,7 +49,6 @@ public class Factory {
 
         ExtendableNetFs extendableNetFs = new ExtendNetFsAdepr(basicNetFs);
 
-        //extendableNetFs = new CacheFs(extendableNetFs);
 
 
         // TODO ADD MD5
@@ -58,6 +58,8 @@ public class Factory {
 
         extendableNetFs = key.length() == 0 ? new NoEncryptionFsImpl(extendableNetFs) : new AesEncryptionFsImpl(extendableNetFs, key.getBytes());
 
+
+        extendableNetFs = new CacheFs(extendableNetFs);
 
         return extendableNetFs;
     }
