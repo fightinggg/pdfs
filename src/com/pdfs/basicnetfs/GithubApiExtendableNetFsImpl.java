@@ -159,12 +159,16 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
                 @Override
                 public int read() throws IOException {
-                    int res = inputStream.read();
-                    if (res == -1 && open) {
-                        response.close();
-                        open = false;
+                    if (open) {
+                        int res = inputStream.read();
+                        if (res == -1 && open) {
+                            response.close();
+                            open = false;
+                        }
+                        return res;
+                    } else {
+                        return -1;
                     }
-                    return res;
                 }
 
                 @Override
