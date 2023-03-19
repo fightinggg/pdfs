@@ -12,7 +12,7 @@ import java.util.Queue;
 
 public class AES {
 
-    private static final int blockSize = 16; // every 16 bit do AES
+    private static final int blockSize = 64; // every 16 bit do AES
 
     public static PdfsFileInputStream decodePerSize(PdfsFileInputStream data, byte[] key) throws IOException {
         byte[] oldSizeBytes = data.readNBytes(8);
@@ -44,31 +44,42 @@ public class AES {
         });
     }
 
+    private static long aesOutSize(long x) {
+        if (x == 0) {
+            return 0;
+        }
+        if (x % 16 == 0) {
+            return x + 16;
+        }
+        return (x + 15) / 16 * 16;
+    }
+
     public static PdfsFileInputStream encodePerSize(PdfsFileInputStream data, byte[] key) {
+        int size = blockSize - 1;
+
+
         final Queue<Byte> queue = new ArrayDeque<>();
-        long resultSize = (data.getRemainSize() + blockSize - 2) / (blockSize - 1) * blockSize + 8;
+        long last = data.getRemainSize() % size;
+        long resultSize = data.getRemainSize() / size * aesOutSize(size) + aesOutSize(last) + 8;
         for (byte b : LongEncodeDecode.encode(data.getRemainSize())) {
             queue.add(b);
         }
 
-        int size = blockSize - 1;
         return new PdfsFileInputStream(resultSize, new InputStream() {
 
             @Override
             public int read() throws IOException {
                 if (queue.isEmpty()) {
-//                for (int i = 0; i < 100000; i++) {
                     byte[] bytes = data.readNBytes(size);
                     if (bytes.length != 0) {
                         byte[] encode = AES.encode(bytes, key);
-                        if (encode.length != blockSize) {
+                        if (encode.length != aesOutSize(bytes.length)) {
                             throw new RuntimeException();
                         }
                         for (byte b : encode) {
                             queue.add(b);
                         }
                     }
-//                }
                 }
                 return queue.isEmpty() ? -1 : (255 & queue.poll());
             }
