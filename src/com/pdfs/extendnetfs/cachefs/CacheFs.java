@@ -37,8 +37,8 @@ public class CacheFs implements ExtendableNetFs {
         }
 
         void put(String key, byte[] data) {
-            int cacheDataSize = 20;
-            int noCacheDataSize = 1000;
+            int cacheDataSize = 5;
+            int noCacheDataSize = 5;
 
             if (cacheMap.containsKey(key)) {
                 CacheNode cacheNode = cacheMap.get(key);
@@ -55,8 +55,7 @@ public class CacheFs implements ExtendableNetFs {
                 int removeVv = cacheData.get(0).getValue().vv;
                 cacheData = cacheData.stream().filter(o -> o.getValue().vv == removeVv).collect(Collectors.toList());
                 Collections.shuffle(cacheData);
-                String remove = cacheData.get(0).getKey();
-                cacheMap.remove(remove);
+                cacheData.get(0).getValue().data = null;
                 log.info("remove cache: {}", remove);
             }
 
@@ -70,7 +69,6 @@ public class CacheFs implements ExtendableNetFs {
                 Collections.shuffle(cacheData);
                 String remove = cacheData.get(0).getKey();
                 cacheMap.remove(remove);
-                log.info("remove cache: {}", remove);
             }
         }
     }
