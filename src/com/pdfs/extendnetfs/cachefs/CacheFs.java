@@ -28,6 +28,8 @@ public class CacheFs implements ExtendableNetFs {
         Map<String, CacheNode> cacheMap = new HashMap<>();
 
         byte[] get(String key) {
+            maybeShutdown();
+
             if (cacheMap.containsKey(key)) {
                 CacheNode cacheNode = cacheMap.get(key);
                 cacheNode.vv++;
@@ -36,7 +38,20 @@ public class CacheFs implements ExtendableNetFs {
             return null;
         }
 
+        Random random = new Random();
+
+        private void maybeShutdown() {
+            int i = Math.abs(random.nextInt()) % 100;
+            if (i == 0) {
+                for (CacheNode value : cacheMap.values()) {
+                    value.vv = (value.vv + 1) / 2;
+                }
+            }
+        }
+
         void put(String key, byte[] data) {
+            maybeShutdown();
+
             int cacheDataSize = 5;
             int noCacheDataSize = 5;
 
