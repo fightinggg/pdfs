@@ -66,7 +66,7 @@ public class CacheFs implements ExtendableNetFs {
             if (notCacheData.size() > noCacheDataSize) {
                 String remove = cacheData.get(0);
                 cacheMap.remove(remove);
-                log.info("remove cache: {}", remove);
+//                log.info("remove cache: {}", remove);
             }
         }
     }
