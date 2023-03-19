@@ -86,12 +86,7 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         // TODO
         params.put("content", new String(Base64.encode(dataBytes)));
         if (oldBytes != null) {
-            oldBytes = Base64.encode(oldBytes);
-            byte[] head = String.format("blob %d\0", oldBytes.length).getBytes();
-            byte[] sum = new byte[(int) (oldBytes.length + head.length)];
-            System.arraycopy(head, 0, sum, 0, head.length);
-            System.arraycopy(oldBytes, 0, sum, head.length, (int) oldBytes.length);
-            params.put("sha", Hex.encode(SHA.encode(sum)));
+            params.put("sha", githubShaCompute(oldBytes));
         }
 
         RequestBody body = RequestBody.create(mediaType, new ObjectMapper().writeValueAsBytes(params));
@@ -109,8 +104,17 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
         response.close();
         if (!response.isSuccessful()) {
-            throw new RuntimeException(response.message());
+            throw new RuntimeException("code=" + response.code() + " msg=" + response.message());
         }
+    }
+
+    @NotNull
+    private String githubShaCompute(byte[] oldBytes) {
+        byte[] head = String.format("blob %d\0", oldBytes.length).getBytes();
+        byte[] sum = new byte[(int) (oldBytes.length + head.length)];
+        System.arraycopy(head, 0, sum, 0, head.length);
+        System.arraycopy(oldBytes, 0, sum, head.length, oldBytes.length);
+        return Hex.encode(SHA.encode(sum));
     }
 
     @NotNull

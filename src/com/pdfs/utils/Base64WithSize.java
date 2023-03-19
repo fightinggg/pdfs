@@ -17,7 +17,7 @@ public class Base64WithSize {
         byte[] sizeBase64 = encode(encode);
 
 
-        return new PdfsFileInputStream((remainSize + 2) / 3 * 4, new InputStream() {
+        return new PdfsFileInputStream(12 + (remainSize + 2) / 3 * 4, new InputStream() {
             final Queue<Byte> queue = new ArrayDeque<>();
 
             {
