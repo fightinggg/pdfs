@@ -31,11 +31,11 @@ public class LocalFileSystemExtendableNetFsImpl extends ValidExtendableNetFsAbst
 
             @Override
             public int read() throws IOException {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    Thread.sleep(10);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
                 return inputStream.read();
             }
         });

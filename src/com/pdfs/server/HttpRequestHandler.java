@@ -1,22 +1,22 @@
 package com.pdfs.server;
 
+import com.pdfs.utils.IOUtils;
 import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Future;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @ChannelHandler.Sharable
@@ -54,10 +54,10 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
         String msg = httpLine + "\n" + httpHeaders + "\n\n";
         byte[] bytes = msg.getBytes(StandardCharsets.UTF_8);
-        ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes));
 
-        InputStream body = rsp.body;
-        readAndWrite(ctx, body, 0L);
+        HttpRsp finalRsp = rsp;
+        InputStream merge = IOUtils.merge(List.of(() -> new ByteArrayInputStream(bytes), () -> finalRsp.body));
+        readAndWrite(ctx, merge, 0L);
     }
 
 
