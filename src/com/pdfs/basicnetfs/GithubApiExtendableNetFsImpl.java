@@ -166,6 +166,13 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
                     }
                     return res;
                 }
+
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    open = false;
+                    response.close();
+                }
             });
         } else if (response.code() == 404) {
             response.close();

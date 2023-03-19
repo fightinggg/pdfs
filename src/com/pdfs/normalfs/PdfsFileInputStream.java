@@ -36,4 +36,11 @@ public class PdfsFileInputStream extends InputStream {
         }
         return read;
     }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        inputStream.close();
+        size = 0;
+    }
 }
