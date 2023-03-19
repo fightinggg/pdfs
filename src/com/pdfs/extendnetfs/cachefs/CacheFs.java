@@ -56,7 +56,7 @@ public class CacheFs implements ExtendableNetFs {
                 cacheData = cacheData.stream().filter(o -> o.getValue().vv == removeVv).collect(Collectors.toList());
                 Collections.shuffle(cacheData);
                 cacheData.get(0).getValue().data = null;
-                log.info("remove cache: {}", remove);
+                log.info("remove cache: {}", cacheData.get(0).getKey());
             }
 
             cacheData = cacheMap.entrySet().stream()
