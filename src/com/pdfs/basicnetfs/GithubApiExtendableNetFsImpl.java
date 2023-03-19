@@ -3,6 +3,7 @@ package com.pdfs.basicnetfs;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pdfs.normalfs.PdfsFileInputStream;
 import com.pdfs.utils.Base64;
+import com.pdfs.utils.Base64WithSize;
 import com.pdfs.utils.Hex;
 import com.pdfs.utils.SHA;
 import okhttp3.*;
@@ -12,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,8 +33,19 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
 
     @Override
     public PdfsFileInputStream readValid(String fileName) throws IOException {
+        return Base64WithSize.decodeWithSize(_retryRead(fileName));
+    }
+
+    @Override
+    public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
+        _writeBase64(fileName, Base64WithSize.encodeWithSize(data));
+    }
+
+
+    @NotNull
+    private PdfsFileInputStream _retryRead(String fileName) throws IOException {
         try {
-            return _readValid(fileName);
+            return _readBase64(fileName);
         } catch (FileNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -43,58 +54,21 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
             } catch (InterruptedException ex) {
                 log.warn("", ex);
             }
-            return _readValid(fileName);
+            return _readBase64(fileName);
         }
     }
 
-    @NotNull
-    private PdfsFileInputStream _readValid(String fileName) throws IOException {
-        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
-        log.info("request to github GET {}", url);
 
-        OkHttpClient client = new OkHttpClient().newBuilder()
-                .callTimeout(10, TimeUnit.MINUTES)
-                .connectTimeout(10, TimeUnit.MINUTES)
-                .readTimeout(10, TimeUnit.MINUTES)
-                .writeTimeout(10, TimeUnit.MINUTES)
-                .build();
-        Request request = new Request.Builder()
-                .url(url)
-                .method("GET", null)
-                .addHeader("Authorization", "Bearer " + githubToken)
-                .addHeader("Accept", "application/vnd.github.v3.raw")
-                .addHeader("X-GitHub-Api-Version", "2022-11-28")
-                .build();
-        long start = System.currentTimeMillis();
-        Response response = client.newCall(request).execute();
-        log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
-        if (response.isSuccessful()) {
-            response.code();
-            ResponseBody body = response.body();
-            return Base64.decode(new PdfsFileInputStream(body.contentLength(), body.byteStream()));
-        } else if (response.code() == 404) {
-            response.code();
-            throw new FileNotFoundException();
-        } else {
-            response.code();
-            throw new RuntimeException(response.message());
-        }
-    }
-
-    @Override
-    public void writeValid(String fileName, PdfsFileInputStream data) throws IOException {
-
-
+    private void _writeBase64(String fileName, PdfsFileInputStream data) throws IOException {
         byte[] dataBytes = data.readAllBytes();
         byte[] oldBytes = null;
         try {
-            oldBytes = readValid(fileName).readAllBytes();
+            oldBytes = _readBase64(fileName).readAllBytes();
             if (Arrays.equals(oldBytes, dataBytes)) {
                 // skip
                 return;
             }
-            oldBytes = Base64.encode(oldBytes);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException ignored) {
         }
 
         String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
@@ -109,10 +83,10 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
         MediaType mediaType = MediaType.parse("application/json");
         Map<String, String> params = new HashMap<>();
         params.put("message", "pdfs-github-api-upload");
-        dataBytes = Base64.encode(dataBytes);
         // TODO
         params.put("content", new String(Base64.encode(dataBytes)));
         if (oldBytes != null) {
+            oldBytes = Base64.encode(oldBytes);
             byte[] head = String.format("blob %d\0", oldBytes.length).getBytes();
             byte[] sum = new byte[(int) (oldBytes.length + head.length)];
             System.arraycopy(head, 0, sum, 0, head.length);
@@ -138,6 +112,41 @@ public class GithubApiExtendableNetFsImpl extends ValidExtendableNetFsAbstract {
             throw new RuntimeException(response.message());
         }
     }
+
+    @NotNull
+    private PdfsFileInputStream _readBase64(String fileName) throws IOException {
+        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", githubUsername, githubRepoName, fileName);
+        log.info("request to github GET {}", url);
+
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .callTimeout(10, TimeUnit.MINUTES)
+                .connectTimeout(10, TimeUnit.MINUTES)
+                .readTimeout(10, TimeUnit.MINUTES)
+                .writeTimeout(10, TimeUnit.MINUTES)
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .method("GET", null)
+                .addHeader("Authorization", "Bearer " + githubToken)
+                .addHeader("Accept", "application/vnd.github.v3.raw")
+                .addHeader("X-GitHub-Api-Version", "2022-11-28")
+                .build();
+        long start = System.currentTimeMillis();
+        Response response = client.newCall(request).execute();
+        log.info("github return {}, cost {} ms", response.code(), System.currentTimeMillis() - start);
+        if (response.isSuccessful()) {
+            response.code();
+            ResponseBody body = response.body();
+            return new PdfsFileInputStream(body.contentLength(), body.byteStream());
+        } else if (response.code() == 404) {
+            response.code();
+            throw new FileNotFoundException();
+        } else {
+            response.code();
+            throw new RuntimeException(response.message());
+        }
+    }
+
 
     @Override
     public void deleteValid(String fileName) throws IOException {

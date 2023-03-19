@@ -1,12 +1,9 @@
 package com.pdfs.server;
 
-import com.pdfs.utils.Base64;
 import io.netty.handler.codec.http.HttpHeaders;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Objects;
 
 public class HttpHandler {
     String usage = """

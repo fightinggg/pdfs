@@ -3,6 +3,9 @@ package com.pdfs.utils;
 import com.pdfs.normalfs.PdfsFileInputStream;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 public class Base64 {
 
@@ -14,23 +17,4 @@ public class Base64 {
         return java.util.Base64.getDecoder().decode(data);
     }
 
-    public static PdfsFileInputStream encode(PdfsFileInputStream pdfsFileInputStream) {
-        byte[] src = new byte[0];
-        try {
-            src = pdfsFileInputStream.readAllBytes();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return PdfsFileInputStream.fromBytes(java.util.Base64.getEncoder().encode(src));
-    }
-
-    public static PdfsFileInputStream decode(PdfsFileInputStream pdfsFileInputStream) {
-        byte[] bytes = new byte[0];
-        try {
-            bytes = pdfsFileInputStream.readAllBytes();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return PdfsFileInputStream.fromBytes(java.util.Base64.getDecoder().decode(bytes));
-    }
 }

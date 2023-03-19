@@ -4,6 +4,7 @@ import com.pdfs.extendnetfs.ExtendableNetFs;
 import com.pdfs.normalfs.PdfsFileInputStream;
 import com.pdfs.utils.AES;
 import com.pdfs.utils.Base64;
+import com.pdfs.utils.Base64WithSize;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
