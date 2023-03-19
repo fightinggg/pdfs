@@ -57,38 +57,40 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes));
 
         InputStream body = rsp.body;
-        readAndWrite(ctx, body);
+        readAndWrite(ctx, body, 0L);
     }
 
 
-    void readAndWrite(ChannelHandlerContext ctx, InputStream inputStream) {
-        int block = 1 << 10; // 1KB
-
-        final boolean[] connect = {true};
-
+    void readAndWrite(ChannelHandlerContext ctx, InputStream inputStream, long totalSize) {
         try {
-            long totalSize = 0;
-            while (connect[0]) {
-                byte[] bytes = inputStream.readNBytes(block);
-                if (bytes.length == 0) {
-                    break;
-                }
-                if ((totalSize + bytes.length) / 1024 / 1024 > totalSize / 1024 / 1024) {
-                    log.info("send bytes now={} MB", totalSize / (1024 * 1024.0));
-                }
-                totalSize += bytes.length;
-                ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes)).addListener((ChannelFutureListener) future -> {
-                    if (!future.isSuccess()) {
-                        connect[0] = false;
-                        Throwable throwable = future.cause();
-                        if (throwable != null) {
-                            log.error("send data failed... ", throwable);
-                        }
-                    }
-                });
+            int block = 1 << 10; // 1KB
+
+            byte[] bytes = inputStream.readNBytes(block);
+            if (bytes.length == 0) {
+                log.info("send bytes total={}", totalSize);
+                ctx.close();
+                return;
             }
-            log.info("send bytes total={}", totalSize);
-            ctx.writeAndFlush(Unpooled.buffer()).addListener(ChannelFutureListener.CLOSE);
+
+
+            if ((totalSize + bytes.length) / 1024 / 1024 > totalSize / 1024 / 1024) {
+                log.info("send bytes now={} MB", totalSize / (1024 * 1024.0));
+            }
+
+
+            ctx.writeAndFlush(Unpooled.buffer(bytes.length).writeBytes(bytes)).addListener((ChannelFutureListener) future -> {
+                if (!future.isSuccess()) {
+                    Throwable throwable = future.cause();
+                    if (throwable != null) {
+                        log.error("send data failed... ", throwable);
+                    }
+                    future.channel().close();
+                } else {
+                    readAndWrite(ctx, inputStream, totalSize + bytes.length);
+                }
+            });
+
+
         } catch (Exception e) {
             ctx.close();
             log.error("", e);
