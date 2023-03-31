@@ -17,8 +17,17 @@ In PFS, every file storage using system's git shell
 
 PDFS v1.0 only support for me now, support for others will come soon
 
-welcome to [PDFS v1.0](http://175.178.107.36:8081/)
+welcome to [PDFS v1.0](http://43.153.75.227:8081/)
 
 ```shell
-docker run -d -v $HOME/.ssh:/root/.ssh:ro -p 8081:8081 --name pdfs  fightinggg/pdfs:master
+docker pull fightinggg/pdfs:master && \
+docker rm -f pdfs &&  \
+docker run -d -v $HOME/.ssh:/root/.ssh:ro \
+-p 8081:8081 --name pdfs fightinggg/pdfs:master  \
+java -jar /app/pdfs.jar \
+-type github_api \
+-github_token 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 \
+-github_reponame pdfs-data-githubapi \
+-github_username fightinggg \
+-group github -name data1 -key pdfs5
 ```
